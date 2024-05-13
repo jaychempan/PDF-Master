@@ -1,10 +1,15 @@
 # llm-pdf-parsing
 ## 项目介绍
-针对LLM的PDF类型的数据处理流程：
 
-1. PDF版面解析
-2. 格式化输出（生成结构化的数据，例如markdown）
-3. 数据清洗流程
+主要针对LLM领域数据中的pdf解析，完成对批量PDF转换成LLM训练数据
+
+1. PDF版面解析（正在进行）
+
+    进行版面识别，然后格式化输出（生成结构化的数据，例如markdown）
+
+2. 数据清洗流程（暂未更新）
+
+    对结构化的的输出进行清洗流程
 
 > 项目版本提交命令
 ```
@@ -12,8 +17,10 @@ git add .
 git commit -m 'init llm-pdf-parsing'
 git push origin main
 可以简化成：
-git commit -am 'add readme'
+git commit -am 'init llm-pdf-parsing'
 git push origin main
+# 分支管理可以提交到其他分支
+git push origin XXX
 ```
 或者参考更多git相关的命令：https://gist.github.com/jaychempan/222113eba9c109238766a3906dc6b8f7
 ## 环境安装
@@ -106,3 +113,37 @@ args = {
 2.页面元素顺序问题（具体到每一个页面的顺序和双栏的顺序）
 
 > 实现思路：单栏的可以直接按照bbox的y坐标大小进行排序，针对双栏需要先对x进行再对y进行排序
+
+`llm-pdf-parsing/PaddleOCR/ppstructure/recovery/recovery_to_doc.py`中有关于单双栏的识别
+```
+flag = 1
+    for i, region in enumerate(res):
+        if len(region["res"]) == 0:
+            continue
+        img_idx = region["img_idx"]
+        if flag == 2 and region["layout"] == "single":
+            section = doc.add_section(WD_SECTION.CONTINUOUS)
+            section._sectPr.xpath("./w:cols")[0].set(qn("w:num"), "1")
+            flag = 1
+        elif flag == 1 and region["layout"] == "double":
+            section = doc.add_section(WD_SECTION.CONTINUOUS)
+            section._sectPr.xpath("./w:cols")[0].set(qn("w:num"), "2")
+            flag = 2
+
+```
+
+3.公式识别问题，转换成latex格式
+
+> 实现思路: 提升准确性，行间公式和行内公式的提取，对于符号角标（例如右下角和右上角等的符号，可以考虑用一些开源符号）
+
+4.pdf解析精度问题
+
+> 调用pdf2docx的api进行识别 --use_pdf2docx_api
+
+但是会有双栏格式问题
+5.效率问题
+
+> 版面分析+重建
+
+CPU上进行处理：5页PDF，时间: 00:00:50
+GPUs上进行待测：
