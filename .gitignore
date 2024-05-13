@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 shangfei/
-
+output_pdf/
 # C extensions
 *.so
 
