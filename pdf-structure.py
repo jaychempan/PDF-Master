@@ -13,7 +13,7 @@ args = {
     '--layout_dict_path': './PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
     '--vis_font_path': './ppocr_img/fonts/simfang.ttf',
     '--recovery': 'True',
-    '--output': '/home/panjiancheng/llm-pdf-parsing/shangfei/shangfei_pdf_output_single',
+    '--output': '/home/panjiancheng/llm-pdf-parsing/shangfei/shangfei_pdf_output_test',
     '--use_pdf2docx_api': 'False',
     '--mode': 'structure',
     '--return_word_box': 'False',
