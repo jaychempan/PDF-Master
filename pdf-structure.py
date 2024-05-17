@@ -3,7 +3,7 @@ import time
 
 # 定义参数字典
 args = {
-    '--image_dir': '/home/panjiancheng/llm-pdf-parsing/shangfei/shangfei_pdf_single',
+    '--image_dir': '/home/panjiancheng/llm-pdf-parsing/shangfei/shangfei_pdf_math',
     '--det_model_dir': './inference/det/ch/ch_PP-OCRv4_det_infer', 
     '--rec_model_dir': './inference/rec/ch/ch_PP-OCRv4_rec_infer',
     '--rec_char_dict_path': './PaddleOCR/ppocr/utils/ppocr_keys_v1.txt',
@@ -13,7 +13,7 @@ args = {
     '--layout_dict_path': './PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
     '--vis_font_path': './ppocr_img/fonts/simfang.ttf',
     '--recovery': 'True',
-    '--output': '/home/panjiancheng/llm-pdf-parsing/shangfei/shangfei_pdf_output_test',
+    '--output': '/home/panjiancheng/llm-pdf-parsing/shangfei/shangfei_pdf_output_math',
     '--use_pdf2docx_api': 'False',
     '--mode': 'structure',
     '--return_word_box': 'False',

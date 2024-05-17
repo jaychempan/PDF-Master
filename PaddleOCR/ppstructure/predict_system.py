@@ -266,6 +266,7 @@ def save_structure_res(res, save_folder, img_name, img_idx=0):
     # 增加子目录存放不同类别
     os.makedirs(excel_save_folder + '/tables/', exist_ok=True)
     os.makedirs(excel_save_folder + '/figures/', exist_ok=True)
+    os.makedirs(excel_save_folder + '/equations/', exist_ok=True)
     os.makedirs(excel_save_folder + '/res/', exist_ok=True)
     res_cp = deepcopy(res)
     # save res
@@ -289,10 +290,16 @@ def save_structure_res(res, save_folder, img_name, img_idx=0):
                     excel_save_folder, "tables/{}_{}.xlsx".format(img_idx, region["bbox"])
                 )
                 to_excel(region["res"]["html"], excel_path)
-            elif region["type"].lower() == "figure":
+            elif region["type"].lower() == "figure" or region["type"].lower() == "table":
                 img_path = os.path.join(
                     # excel_save_folder, "figures/{}_{}.jpg".format(region["bbox"], img_idx)
                     excel_save_folder, "figures/{}_{}.jpg".format(img_idx, region["bbox"])
+                )
+                cv2.imwrite(img_path, roi_img)
+            elif region["type"].lower() == "equation":
+                img_path = os.path.join(
+                    # excel_save_folder, "figures/{}_{}.jpg".format(region["bbox"], img_idx)
+                    excel_save_folder, "equations/{}_{}.jpg".format(img_idx, region["bbox"])
                 )
                 cv2.imwrite(img_path, roi_img)
 

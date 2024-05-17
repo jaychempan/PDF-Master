@@ -63,7 +63,8 @@ TODO:再次安装,可以写一个具体教程
 │   ├── test_tipc
 │   ├── tools
 │   └── train.sh
-├── pdf-structure.py # 执行PaddleOCR里面的ppstructure主函数
+├── pdf-structure.py # 执行PaddleOCR里面的ppstructure主函数，获得结构化的数据json
+├── pos-process.py # 执行PaddleOCR后的后处理，针对难处理的数据，转换成markdown
 ├── ppocr_img # 官方给的一些PaddleOCR的测试例子，也包括字体等
 │   ├── ch
 │   ├── fonts
@@ -169,4 +170,26 @@ GPUs上进行待测：暂时不处理
 
 7.（完成）过滤页面中无用成分（去除页眉，页脚，图片标题和表格标题与注解，保证正文流畅）
 
-目前的方法是保存了res后进行的生成`res`后markdown生成前的的过滤，进一步提升效率可以考虑在保存`res`前就把不需要的进行过滤，可以提升速度，但是如果后面需要这部分信息就会丢失
+目前的方法是保存了res后进行的生成`res`后markdown生成前的的过滤，进一步提升效率可以考虑在保存`res`前就把不需要的进行过滤，可以提升速度，但是如果后面需要这部分信息就会丢失。
+
+8.添加公式转latex功能（Shanghai AI Lab：https://github.com/opendatalab/UniMERNet）
+
+环境配置：
+```
+git clone https://github.com/opendatalab/UniMERNet.git
+
+# Download git-lfs by following the steps based on your operating system.
+curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+sudo apt-get install git-lfs
+
+git lfs install
+git clone https://huggingface.co/wanderkid/unimernet
+
+sudo apt-get install libmagickwand-dev
+```
+
+9.在OCR框架后面再加入后处理阶段，针对一些不能直接转换的表格，图片和公式进行后处理
+
+实现，如果直接转换成markdown读取需要花费大量的时间，所以还是先转换成结构化的json格式，后续可以直接调用针对具体类型进行处理，加快处理流程
+
+json格式写入（需要有顺序）

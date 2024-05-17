@@ -45,6 +45,13 @@ def convert_info_markdown(img, res, save_folder, img_name):
             img_path = "./figures/{}_{}.jpg".format(img_idx, region["bbox"])
             markdown_content.append(f"![Figure {img_idx}]({img_path})\n")
         
+        elif region["type"].lower() == "equation":
+            # Ignored as specified in the original code
+            img_idx = region["img_idx"]
+            excel_save_folder = os.path.join(save_folder, img_name)
+            img_path = "./equations/{}_{}.jpg".format(img_idx, region["bbox"])
+            markdown_content.append(f"![Equations {img_idx}]({img_path})\n")
+
         elif region["type"].lower() == "title":
             level = "#"  # Adjust as needed for different levels of headings
             markdown_content.append(f"{level} {region['res'][0]['text']}\n")
@@ -58,12 +65,12 @@ def convert_info_markdown(img, res, save_folder, img_name):
         elif region["type"].lower() == "text":
             spans = ""
             for line in region["res"]:
-                if line['text'].strip().endswith('.'):
-                    print(line['text'])
+                if line['text'].strip().endswith('.') or line['text'].strip().endswith('。'):
+                    # print(line['text'])
                     # 提取行末尾前的单词
                     words = line['text'].rsplit('.', 1)[0].lower().split()
-                    print(words)
-                    if words[-1] in ['fig', 'tab']:
+                    # print(words)
+                    if words[-1] in ['fig', 'tab', '图', '表']:
                         spans += line['text'] + ' '
                     else:
                         spans += line['text'] + '\n\n'
