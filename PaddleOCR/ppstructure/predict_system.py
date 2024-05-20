@@ -379,18 +379,21 @@ def main(args):
                 from ppstructure.recovery.recovery_to_doc import (
                     sorted_layout_boxes,
                     # convert_info_docx,
-                    convert_info_markdown,
+                    # convert_info_markdown,
+                    convert_info_to_json,
                     
                 )
 
                 h, w, _ = img.shape
                 res = sorted_layout_boxes(res, w) # 这里完成对文章顺序的重新排列，尤其是对双栏的文档，为了保证排序的准确性这里还是不能进行合并
-                all_res += res
-
+                # all_res += res # 这里all_res是一整张列表
+                all_res.append(res) # 这里all_res里面包含多个子列表
+  
         if args.recovery and all_res != []:
             try:
                 # Example usage:
-                convert_info_markdown(img, all_res, save_folder, img_name)
+                convert_info_to_json(img, all_res, save_folder, img_name)
+                # convert_info_markdown(img, all_res, save_folder, img_name)
                 # convert_info_docx(img, all_res, save_folder, img_name)
             except Exception as ex:
                 logger.error(

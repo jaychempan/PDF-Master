@@ -15,24 +15,185 @@
 import os
 from copy import deepcopy
 
-from docx import Document
-from docx import shared
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.section import WD_SECTION
-from docx.oxml.ns import qn
-from docx.enum.table import WD_TABLE_ALIGNMENT
-
 from ppstructure.recovery.table_process import HtmlToDocx
 
 from ppocr.utils.logging import get_logger
 
 logger = get_logger()
 
-# import os
-import markdownify
+def convert_info_to_json(img, res, save_folder, img_name):
+    import json
+    pdf_info = {
+        "pdf_info": [],
+        "_parse_type": "ocr"
+    }
+    page_idx = -1
+    for page in res:
+        page_idx = page_idx + 1
+        # 这里双栏pdf的话，就是把双栏变成单栏为一页
+        page_info = {
+                "preproc_blocks": [],
+                # "layout_bboxes": [], # 感觉不需要
+                "page_idx": page_idx, # 需要更新
+                # "page_size": [595.0, 842.0], # 不重要暂时不处理
+                # "_layout_tree": [], # 好像和layout_bboxes没区别
+                "images": [], # 图像包括图像标题放这里
+                "tables": [], # 表格包括表格标题放这里
+                "interline_equations": [],
+                "discarded_blocks": [], # 需要丢弃的放这里
+                "para_blocks": [] # 按照段落顺序，但是好像没区别
+            }
+        
+        for region in page:
+            if len(region["res"]) == 0:
+                continue
+            # 处理图片和图片标题，放到images里面
+            if region["type"].lower() == 'figure':
+                block = {
+                "type": region["type"].lower(),
+                "bbox": region["bbox"],
+                "lines": []
+                }
+                for span in region["res"]:
+                    block["lines"].append({
+                        "bbox": region["bbox"],
+                        "spans": [
+                            {
+                                "bbox": region["bbox"],
+                                "type": "image_body", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+                                "image_path": "./figures/{}_{}.jpg".format(page_idx, region["bbox"])
+                            }
+                        ]
+                    })
+                page_info["images"].append(block)
+            elif region["type"].lower() == 'figure_caption':
+                block = {
+                "type": region["type"].lower(),
+                "bbox": region["bbox"],
+                "lines": []
+                }
+                for span in region["res"]:
+                    block["lines"].append({
+                        "bbox": region["bbox"],
+                        "spans": [
+                            {
+                                "bbox": region["bbox"],
+                                "content": span["text"],
+                                "type": "image_caption", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+                                
+                            }
+                        ]
+                    })
+                page_info["images"].append(block)
+            elif region["type"].lower() == 'table':
+                block = {
+                "type": region["type"].lower(),
+                "bbox": region["bbox"],
+                "lines": []
+                }
+                for span in region["res"]:
+                    block["lines"].append({
+                        "bbox": region["bbox"],
+                        "spans": [
+                            {
+                                "bbox": region["bbox"],
+                                "type": "table", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+                                "image_path": "./tables/{}_{}.jpg".format(page_idx, region["bbox"])
+                            }
+                        ]
+                    })
+                page_info["tables"].append(block)
+            elif region["type"].lower() == 'table_caption':
+                block = {
+                "type": region["type"].lower(),
+                "bbox": region["bbox"],
+                "lines": []
+                }
+                for span in region["res"]:
+                    block["lines"].append({
+                        "bbox": region["bbox"],
+                        "spans": [
+                            {
+                                "bbox": region["bbox"],
+                                "content": span["text"],
+                                "type": "table_caption", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+                            }
+                        ]
+                    })
+                page_info["tables"].append(block)
+            elif region["type"].lower() == 'title':
+                block = {
+                "type": region["type"].lower(),
+                "bbox": region["bbox"],
+                "lines": []
+                }
+                for span in region["res"]:
+                    block["lines"].append({
+                        "bbox": region["bbox"],
+                        "spans": [
+                            {
+                                "bbox": span["text_region"],
+                                "content": span["text"],
+                                "type": "text" # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+                            }
+                        ]
+                    })
+                page_info["preproc_blocks"].append(block)
+
+            elif region["type"].lower() == 'text':
+                block = {
+                "type": region["type"].lower(),
+                "bbox": region["bbox"],
+                "lines": []
+                }
+                for span in region["res"]:
+                    block["lines"].append({
+                        "bbox": region["bbox"],
+                        "spans": [
+                            {
+                                "bbox": region["bbox"],
+                                "content": span["text"],
+                                "type": "text" # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+                            }
+                        ]
+                    })
+                page_info["preproc_blocks"].append(block)
+
+            elif region["type"].lower() == 'equation':
+                block = {
+                "type": region["type"].lower(),
+                "bbox": region["bbox"],
+                "lines": []
+                }
+                for span in region["res"]:
+                    block["lines"].append({
+                        "bbox": region["bbox"],
+                        "spans": [
+                            {
+                                "bbox": region["bbox"],
+                                "content": span["text"],
+                                "type": "text",
+                                "image_path": "./equations/{}_{}.jpg".format(page_idx, region["bbox"])
+                            }
+                        ]
+                    })
+            page_info["preproc_blocks"].append(block)
+
+        pdf_info["pdf_info"].append(page_info)
+
+
+
+    # Save to JSON file
+    json_path = os.path.join(save_folder, f"{img_name}_ocr.json")
+    with open(json_path, 'w', encoding='utf-8') as json_file:
+        json.dump(pdf_info, json_file, ensure_ascii=False, indent=4)
+    print(f"JSON saved to {json_path}")
+
+
 
 # 转换成markdown格式
 def convert_info_markdown(img, res, save_folder, img_name):
+    import markdownify
     markdown_content = []
 
     for region in res:
@@ -98,6 +259,12 @@ def convert_info_markdown(img, res, save_folder, img_name):
 
 # 转换成docx格式
 def convert_info_docx(img, res, save_folder, img_name):
+    from docx import Document
+    from docx import shared
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.section import WD_SECTION
+    from docx.oxml.ns import qn
+    from docx.enum.table import WD_TABLE_ALIGNMENT
     doc = Document()
     doc.styles["Normal"].font.name = "Times New Roman"
     doc.styles["Normal"]._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
