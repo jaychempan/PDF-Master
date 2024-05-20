@@ -21,6 +21,19 @@ from ppocr.utils.logging import get_logger
 
 logger = get_logger()
 
+
+def cal_bbox(text_region):
+    # 计算左上角和右下角的坐标
+    x_min = int(text_region[0][0])
+    y_min = int(text_region[0][1])
+    x_max = int(text_region[1][0])
+    y_max = int(text_region[2][1])
+
+    # 生成 bbox
+    bbox = [x_min, y_min, x_max, y_max]
+
+    return bbox
+
 def convert_info_to_json(img, res, save_folder, img_name):
     import json
     pdf_info = {
@@ -41,143 +54,176 @@ def convert_info_to_json(img, res, save_folder, img_name):
                 "tables": [], # 表格包括表格标题放这里
                 "interline_equations": [],
                 "discarded_blocks": [], # 需要丢弃的放这里
-                "para_blocks": [] # 按照段落顺序，但是好像没区别
+                "para_blocks": [] # 按照段落顺序存放上面各种不同元素
             }
-        
-        for region in page:
+        # 初始化图像模块
+        image_block = {
+                "type": "image",
+                "bbox": [],
+                "blocks": []
+                }
+        for region_idx in range(len(page)):
+            region = page[region_idx]
+            
             if len(region["res"]) == 0:
                 continue
-            # 处理图片和图片标题，放到images里面
-            if region["type"].lower() == 'figure':
-                block = {
-                "type": region["type"].lower(),
-                "bbox": region["bbox"],
-                "lines": []
-                }
-                for span in region["res"]:
-                    block["lines"].append({
-                        "bbox": region["bbox"],
-                        "spans": [
-                            {
-                                "bbox": region["bbox"],
-                                "type": "image_body", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
-                                "image_path": "./figures/{}_{}.jpg".format(page_idx, region["bbox"])
-                            }
-                        ]
-                    })
-                page_info["images"].append(block)
-            elif region["type"].lower() == 'figure_caption':
-                block = {
-                "type": region["type"].lower(),
-                "bbox": region["bbox"],
-                "lines": []
-                }
-                for span in region["res"]:
-                    block["lines"].append({
-                        "bbox": region["bbox"],
-                        "spans": [
-                            {
-                                "bbox": region["bbox"],
-                                "content": span["text"],
-                                "type": "image_caption", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
-                                
-                            }
-                        ]
-                    })
-                page_info["images"].append(block)
-            elif region["type"].lower() == 'table':
-                block = {
-                "type": region["type"].lower(),
-                "bbox": region["bbox"],
-                "lines": []
-                }
-                for span in region["res"]:
-                    block["lines"].append({
-                        "bbox": region["bbox"],
-                        "spans": [
-                            {
-                                "bbox": region["bbox"],
-                                "type": "table", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
-                                "image_path": "./tables/{}_{}.jpg".format(page_idx, region["bbox"])
-                            }
-                        ]
-                    })
-                page_info["tables"].append(block)
-            elif region["type"].lower() == 'table_caption':
-                block = {
-                "type": region["type"].lower(),
-                "bbox": region["bbox"],
-                "lines": []
-                }
-                for span in region["res"]:
-                    block["lines"].append({
-                        "bbox": region["bbox"],
-                        "spans": [
-                            {
-                                "bbox": region["bbox"],
-                                "content": span["text"],
-                                "type": "table_caption", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
-                            }
-                        ]
-                    })
-                page_info["tables"].append(block)
-            elif region["type"].lower() == 'title':
-                block = {
-                "type": region["type"].lower(),
-                "bbox": region["bbox"],
-                "lines": []
-                }
-                for span in region["res"]:
-                    block["lines"].append({
-                        "bbox": region["bbox"],
-                        "spans": [
-                            {
-                                "bbox": span["text_region"],
-                                "content": span["text"],
-                                "type": "text" # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
-                            }
-                        ]
-                    })
-                page_info["preproc_blocks"].append(block)
+            
+            ## 存放段落结构，按照顺序进行存储，文本的话可能按照是否是句号和.等固定规则进行结合
+            
+            ## 分类处理--处理图片和图片标题
+            if region["type"].lower() == 'figure' or region["type"].lower() == 'figure_caption':
+                image_block["blocks"].append({
+                    "bbox": region["bbox"],
+                    "spans": [
+                        {
+                            "bbox": region["bbox"],
+                            "type": "image_body", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+                            "image_path": "./figures/{}_{}.jpg".format(page_idx, region["bbox"])
+                        }
+                    ]
+                })
+                # 如果下一个region不是image caption的话，就直接添加image_block,认为是没识别或者没有image_caption
+                if region_idx+1 <= len(page) and page[region_idx+1]["type"].lower() == 'figure_caption':
+                    image_block["blocks"].append({
+                    "bbox": cal_bbox(),
+                    "spans": [
+                        {
+                            "bbox": region["bbox"],
+                            "type": "image_body", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+                            "image_path": "./figures/{}_{}.jpg".format(page_idx, region["bbox"])
+                        }
+                    ]
+                })
 
-            elif region["type"].lower() == 'text':
-                block = {
-                "type": region["type"].lower(),
-                "bbox": region["bbox"],
-                "lines": []
-                }
-                for span in region["res"]:
-                    block["lines"].append({
-                        "bbox": region["bbox"],
-                        "spans": [
-                            {
-                                "bbox": region["bbox"],
-                                "content": span["text"],
-                                "type": "text" # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
-                            }
-                        ]
-                    })
-                page_info["preproc_blocks"].append(block)
 
-            elif region["type"].lower() == 'equation':
-                block = {
-                "type": region["type"].lower(),
-                "bbox": region["bbox"],
-                "lines": []
-                }
-                for span in region["res"]:
-                    block["lines"].append({
-                        "bbox": region["bbox"],
-                        "spans": [
-                            {
-                                "bbox": region["bbox"],
-                                "content": span["text"],
-                                "type": "text",
-                                "image_path": "./equations/{}_{}.jpg".format(page_idx, region["bbox"])
-                            }
-                        ]
-                    })
-            page_info["preproc_blocks"].append(block)
+                else:
+                    for span in region["res"]:
+                        image_block["blocks"].append({
+                            "bbox": bbox,
+                            "spans": [
+                                {
+                                    "bbox": cal_bbox,
+                                    "content": span["text"],
+                                    "type": "image_caption", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+                                }
+                            ]
+                        })
+                    page_info["images"].append(image_block)
+
+            # elif region["type"].lower() == 'table':
+            #     block = {
+            #     "type": region["type"].lower(),
+            #     "bbox": region["bbox"],
+            #     "lines": []
+            #     }
+            #     for span in region["res"]:
+            #         block["lines"].append({
+            #             "bbox": region["bbox"],
+            #             "spans": [
+            #                 {
+            #                     "bbox": region["bbox"],
+            #                     "type": "table", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+            #                     "image_path": "./tables/{}_{}.jpg".format(page_idx, region["bbox"])
+            #                 }
+            #             ]
+            #         })
+            #     page_info["tables"].append(block)
+
+            # elif region["type"].lower() == 'table_caption':
+            #     block = {
+            #     "type": region["type"].lower(),
+            #     "bbox": region["bbox"],
+            #     "lines": []
+            #     }
+            #     for span in region["res"]:
+            #         block["lines"].append({
+            #             "bbox": region["bbox"],
+            #             "spans": [
+            #                 {
+            #                     "bbox": region["bbox"],
+            #                     "content": span["text"],
+            #                     "type": "table_caption", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+            #                 }
+            #             ]
+            #         })
+            #     page_info["tables"].append(block)
+
+            # elif region["type"].lower() == 'title':
+            #     for span in region["res"]:
+            #         block = {
+            #         "type": region["type"].lower(),
+            #         "bbox": region["bbox"],
+            #         "lines": []
+            #         }
+            #         block["lines"].append({
+            #             "bbox": region["bbox"],
+            #             "spans": [
+            #                 {
+            #                     "bbox": span["text_region"],
+            #                     "content": span["text"],
+            #                     "type": "text" # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+            #                 }
+            #             ]
+            #         })
+            #         page_info["preproc_blocks"].append(block)
+
+            # elif region["type"].lower() == 'text':
+            #     for span in region["res"]:
+            #         text_region = span["text_region"]
+
+            #         # 计算左上角和右下角的坐标
+            #         x_min = int(text_region[0][0])
+            #         y_min = int(text_region[0][1])
+            #         x_max = int(text_region[1][0])
+            #         y_max = int(text_region[2][1])
+
+            #         # 生成 bbox
+            #         bbox = [x_min, y_min, x_max, y_max]
+
+            #         block = {
+            #             "type": region["type"].lower(),
+            #             "bbox": bbox,
+            #             "lines": []
+            #             }
+            #         block["lines"].append({
+            #             "bbox": bbox,
+            #             "spans": [
+            #                 {
+            #                     "bbox": bbox,
+            #                     "content": span["text"],
+            #                     "type": "text" # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+            #                 }
+            #             ]
+            #         })
+            #         page_info["preproc_blocks"].append(block)
+
+            # elif region["type"].lower() == 'equation':
+            #     block = {
+            #     "type": region["type"].lower(),
+            #     "bbox": region["bbox"],
+            #     "lines": []
+            #     }
+            #     for span in region["res"]:
+            #         block["lines"].append({
+            #             "bbox": region["bbox"],
+            #             "spans": [
+            #                 {
+            #                     "bbox": region["bbox"],
+            #                     "content": span["text"],
+            #                     "type": "text",
+            #                     "image_path": "./equations/{}_{}.jpg".format(page_idx, region["bbox"])
+            #                 }
+            #             ]
+            #         })
+            #     page_info["preproc_blocks"].append(block)
+
+            # else:
+            #     block = {
+            #     "type": region["type"].lower(),
+            #     "bbox": region["bbox"],
+            #     "lines": []
+            #     }
+            #     page_info["preproc_blocks"].append(block)
 
         pdf_info["pdf_info"].append(page_info)
 

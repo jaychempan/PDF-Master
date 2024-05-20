@@ -1,0 +1,77 @@
+{
+    "pdf_info": [
+        {
+            "preproc_blocks": [],
+            "page_idx": 0,
+            "images": [
+                {
+                    "type": "figure",
+                    "bbox": [
+                        391,
+                        546,
+                        832,
+                        663
+                    ],
+                    "blocks": [
+                        {
+                            "bbox": [
+                                391,
+                                546,
+                                832,
+                                663
+                            ],
+                            "spans": [
+                                {
+                                    "bbox": [
+                                        391,
+                                        546,
+                                        832,
+                                        663
+                                    ],
+                                    "type": "image_body",
+                                    "image_path": "./figures/0_[391, 546, 832, 663].jpg"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "figure_caption",
+                    "bbox": [
+                        525,
+                        670,
+                        737,
+                        688
+                    ],
+                    "blocks": [
+                        {
+                            "bbox": [
+                                482,
+                                668,
+                                742,
+                                691
+                            ],
+                            "spans": [
+                                {
+                                    "bbox": [
+                                        482,
+                                        668,
+                                        742,
+                                        691
+                                    ],
+                                    "content": "图3-723部对起飞距离的定义",
+                                    "type": "image_caption"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "tables": [],
+            "interline_equations": [],
+            "discarded_blocks": [],
+            "para_blocks": []
+        }
+    ],
+    "_parse_type": "ocr"
+}

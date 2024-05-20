@@ -213,6 +213,44 @@ page_info = {
         "para_blocks": [] # 按照段落顺序，可以放置preproc_blocks后处理格式
     }
 
+# images 结构解析(三级结构)
+{
+    "type": "image",
+    "bbox": [],
+    "blocks": [] # 其中包含了image_body 和 image_caption
+}
+
+## image_body 和 image_caption具体结构都为
+{
+    "bbox": [],
+    "type": "image_body", # or "image_caption"
+    "lines": []
+}
+
+### lines内包含
+#### image_body
+{
+    "bbox": [],
+    "spans": [
+        {
+            "bbox": [],
+            "type": "image",
+            "image_path": "XXX.jpg"
+        }
+    ]
+}
+#### image_caption
+{
+    "bbox": [],
+    "spans": [
+        {
+            "bbox": [],
+            "content": "XXXX",
+            "type": "inline_equation"
+        }
+    ]
+}
+
 ```
 </details>
 
