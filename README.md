@@ -1,4 +1,4 @@
-# llm-pdf-parsing
+# 大模型PDF文档解析-llm-pdf-parsing
 ## 项目介绍
 
 主要针对LLM领域数据中的pdf解析，完成对批量PDF转换成LLM训练数据
@@ -26,7 +26,17 @@ git push origin XXX
 环境安装可以参考：https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/ppstructure/recovery/README_ch.md#2
 
 ```
-TODO:再次安装,可以写一个具体教程
+conda create --name llmpro python=3.9
+conda activate llmpro
+python3 -m pip install "paddlepaddle-gpu" -i https://mirror.baidu.com/pypi/simple
+cd llm-pdf-parsing/PaddleOCR
+python3 -m pip install -r ppstructure/recovery/requirements.txt
+# 安装 paddleocr，推荐使用2.6版本
+pip3 install "paddleocr>=2.6"
+
+pip install markdownify
+
+pip install --upgrade unimernet
 ```
 ## 目录结构
 以下是`llm-pdf-parsing`项目的目录结构说明
@@ -62,14 +72,8 @@ TODO:再次安装,可以写一个具体教程
 │   ├── tools
 │   └── train.sh
 ├── pdf-structure.py # 执行PaddleOCR里面的ppstructure主函数，获得结构化的数据json
-├── pos-process.py # 执行PaddleOCR后的后处理，针对难处理的数据，转换成markdown
-├── ppocr_img # 官方给的一些PaddleOCR的测试例子，也包括字体等
-│   ├── ch
-│   ├── fonts
-│   ├── imgs
-│   ├── imgs_en
-│   ├── imgs_words
-│   └── table
+├── pos-process.py # 执行PaddleOCR后的后处理，针对难处理的数据进行处理，获得后处理后的结构化数据json
+├── json2markdown.py # 将结构化的json转换成markdown
 ├── README.md
 └── shangfei  # 商飞数据例子
     ├── shangfei_pdf
@@ -208,7 +212,7 @@ page_info = {
         # "_layout_tree": [], # 好像和layout_bboxes没区别
         "images": [], # 图像包括图像标题放这里
         "tables": [], # 表格包括表格标题放这里
-        "interline_equations": [],
+        "interline_equations": [], # 行间公式放在这里
         "discarded_blocks": [], # 需要丢弃的放这里
         "para_blocks": [] # 按照段落顺序，可以放置preproc_blocks后处理格式
     }
@@ -297,6 +301,20 @@ lines 内部包含：
 
 ```
 </details>
+
+10.（基本完成）实现结构化json拼装markdown-json2markdown.py
+    后续对于行内公式和更进一步的图像表格的latex转换后需要进一步修改
+
+11.实现pos-process
+
+```
+## json全读取并进行重新写入，
+# 功能1：实现公式到latex格式的转换，修改对应json中的位置
+# 功能2：实现对表格到latex格式转换，修改对应json中的位置
+# 功能3：实现对图片到语义的格式转换，修改对应json中的位置.
+```
+
+
 
 ## 感谢
 

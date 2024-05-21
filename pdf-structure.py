@@ -3,7 +3,7 @@ import time
 
 # 定义参数字典
 args = {
-    '--image_dir': '/home/panjiancheng/llm-pdf-parsing/test_pdfs/飞机设计手册——第05册(民用飞机总体设计).pdf',
+    '--image_dir': './test_pdfs/飞机设计手册——第05册(民用飞机总体设计).pdf',
     '--det_model_dir': './inference/det/ch/ch_PP-OCRv4_det_infer', 
     '--rec_model_dir': './inference/rec/ch/ch_PP-OCRv4_rec_infer',
     '--rec_char_dict_path': './PaddleOCR/ppocr/utils/ppocr_keys_v1.txt',
@@ -13,11 +13,11 @@ args = {
     '--layout_dict_path': './PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
     '--vis_font_path': './ppocr_img/fonts/simfang.ttf',
     '--recovery': 'True',
-    '--output': '/home/panjiancheng/llm-pdf-parsing/test_pdfs',
+    '--output': './test_pdfs',
     '--use_pdf2docx_api': 'False',
     '--mode': 'structure',
     '--return_word_box': 'False',
-    '--use_gpu': 'False'
+    '--use_gpu': 'True'
 }
 
 def run_predict_system(args_dict):
