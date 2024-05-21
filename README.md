@@ -201,7 +201,7 @@ pdf_info = {
 }
 # 每个页面中获取的信息
 page_info = {
-        "preproc_blocks": [],
+        "preproc_blocks": [], # 也是按照顺序（包含所有需要的要素）
         # "layout_bboxes": [], # 感觉不需要
         "page_idx": page_idx, # 需要更新
         # "page_size": [595.0, 842.0], # 不重要暂时不处理
@@ -212,7 +212,7 @@ page_info = {
         "discarded_blocks": [], # 需要丢弃的放这里
         "para_blocks": [] # 按照段落顺序，可以放置preproc_blocks后处理格式
     }
-
+################图像和图像标题处理###############################
 # images 结构解析(三级结构)
 {
     "type": "image",
@@ -246,15 +246,60 @@ page_info = {
         {
             "bbox": [],
             "content": "XXXX",
-            "type": "inline_equation"
+            "type": "inline_equation" # or "text"
         }
     ]
 }
+
+################表格和表格标题处理###############################
+（同上格式）
+
+################文本和文本标题处理###############################
+# text/title
+{
+    "type": "text", # or "title"
+    "bbox": [],
+    "lines": [] # 其中包含了image_body 和 image_caption
+}
+
+lines 内部包含：
+{
+    "bbox": [],
+    "spans": [
+        {
+            "bbox": [],
+            "content": "XXX",
+            "type": "inline_equation" # or "text"
+        }
+    ]
+}
+################公式处理###############################
+# interline_equations
+## 
+{
+    "type": "interline_equation", 
+    "bbox": [],
+    "lines": [] # 其中包含了image_body 和 image_caption
+}
+
+lines 内部包含：
+{
+    "bbox": [],
+    "spans": [
+        {
+            "bbox": [],
+            "content": "XXX",
+            "type": "interline_equation" $ 是转换成latex格式的，所以需要进行后处理
+        }
+    ]
+}
+
 
 ```
 </details>
 
 ## 感谢
+
 https://github.com/opendatalab/UniMERNet
 
 https://github.com/PaddlePaddle/PaddleOCR/tree/main
