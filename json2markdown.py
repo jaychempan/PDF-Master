@@ -20,13 +20,16 @@ def process_one_page(page_info, markdown_content):
     print(f"Processing page index: {page_info['page_idx']}")
     
     # 按照顺序处理每一个block
-    for block in page_info["preproc_blocks"]:
-        process_one_block(block, markdown_content, page_info['page_idx'])
+    for block_idx in range(len(page_info["preproc_blocks"])):
+        
+        process_one_block(page_info, markdown_content, page_info['page_idx'], block_idx)
     
     # 按照顺序处理preproc_blocks中的内容，拼装成markdown
 
 # 针对不同block类型进行处理，输出成对应的markdown语句
-def process_one_block(block, markdown_content, page_idx):
+def process_one_block(page_info, markdown_content, page_idx, block_idx):
+    block = page_info['preproc_blocks'][block_idx]
+    math_block = page_info['interline_equations']
     block_type = block["type"]
     print(f"Processing {block_type}:")
 
@@ -39,7 +42,7 @@ def process_one_block(block, markdown_content, page_idx):
                     one_title += content
                 elif span['type'] == "inline_equation":
                     one_title += content # TODO：后续应该加上$$,现在不做处理
-        markdown_content.append(f"{one_title}")
+        markdown_content.append(f"# {one_title}")
     elif block_type == "text":
         one_text = ""
         for line in block["lines"]:
@@ -85,7 +88,7 @@ def process_one_block(block, markdown_content, page_idx):
                     for span in line["spans"]:
                         if span["type"] == "image":
                             image_path = span['image_path']
-                            one_image_body += f"![Figure {page_idx}]({image_path})\n\n"
+                            one_image_body += f"![Table {page_idx}]({image_path})\n\n"
             elif block['type'] == "table_caption":
                 for line in block["lines"]:
                     for span in line["spans"]:
@@ -99,8 +102,13 @@ def process_one_block(block, markdown_content, page_idx):
         for line in block["lines"]:
             for span in line["spans"]:
                 if span["type"] == "interline_equation":
-                    image_path = span['image_path']
-                    one_image_body += f"\n\n![interline_equation {page_idx}]({image_path})\n\n"
+                    print(span)
+                    math_idx = span['math_idx']
+                    print(f"math_idx: {math_idx}")
+                    content = math_block[math_idx]['lines'][-1]['spans'][-1]['content']
+                    one_image_body += f"\n\n$${content}$$\n\n"
+                    # image_path = span['image_path']
+                    # one_image_body += f"\n\n![interline_equation {page_idx}]({image_path})\n\n"
         markdown_content.append(f"{one_image_body}")
 
 
@@ -114,19 +122,47 @@ def load_json_file(file_path):
 
 def process_directory(directory_path):
     for root, dirs, files in os.walk(directory_path):
-        for file in files:
-            if file.endswith(".json"):
-                json_file_path = os.path.join(root, file)
-                pdf_info = load_json_file(json_file_path)
-                markdown_content = process_one_pdf(pdf_info)
-                
-                if markdown_content:
-                    markdown_file_name = file.replace(".json", ".md")
-                    markdown_path = os.path.join(root, markdown_file_name)
-                    with open(markdown_path, 'w', encoding='utf-8') as md_file:
-                        md_file.write("\n".join(markdown_content))
-                    print(f"Markdown saved to {markdown_path}")
+        for dir_ in dirs:
+            dir_path = os.path.join(root, dir_)
+            print(f"dir_path:{dir_path}")
+            for _, _, files in os.walk(dir_path):
+                print(files)
+                for file in files:
+                    if file.endswith(".json"):
+                        print(f"processing {file}...")
+                        json_file_path = os.path.join(dir_path, file)
+                        pdf_info = load_json_file(json_file_path)
+                        markdown_content = process_one_pdf(pdf_info)
+                        
+                        if markdown_content:
+                            markdown_file_name = file.replace(".json", ".md")
+                            markdown_path = os.path.join(dir_path, markdown_file_name)
+                            with open(markdown_path, 'w', encoding='utf-8') as md_file:
+                                md_file.write("\n".join(markdown_content))
+                            print(f"Markdown saved to {markdown_path}")
+                break
+        break
 
-# 指定要处理的目录路径
-directory_path = '/root/llm-pdf-parsing/test_pdfs/structure'
-process_directory(directory_path)
+
+if __name__ == "__main__":
+    import argparse
+    import time
+    parser = argparse.ArgumentParser(
+    description=(
+        "将格式化的json文件转换成markdown文件"
+    )
+    )
+    parser.add_argument(
+    "--directory_path",
+    type=str,
+    required=True,
+    help="指定目录下的所有子目录包含了json文件",
+    )
+
+    args = parser.parse_args()
+
+    start_time = time.time()
+    # print(args.directory_path)
+    process_directory(args.directory_path)
+
+    print(time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time)))

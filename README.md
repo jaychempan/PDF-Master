@@ -34,9 +34,12 @@ python3 -m pip install -r ppstructure/recovery/requirements.txt
 # 安装 paddleocr，推荐使用2.6版本
 pip3 install "paddleocr>=2.6"
 
+# markdown转换需要
 pip install markdownify
 
+# 公式支持
 pip install --upgrade unimernet
+sudo apt-get install libmagickwand-dev
 ```
 ## 目录结构
 以下是`llm-pdf-parsing`项目的目录结构说明
@@ -61,7 +64,7 @@ pip install --upgrade unimernet
 │   ├── paddleocr.py
 │   ├── ppocr
 │   ├── PPOCRLabel
-│   ├── ppstructure # 主要用来解析pdf结构的代码
+│   ├── ppstructure # 主要用来解析pdf版面的结构的代码
 │   ├── README_ch.md
 │   ├── README_en.md
 │   ├── README.md
@@ -76,15 +79,13 @@ pip install --upgrade unimernet
 ├── json2markdown.py # 将结构化的json转换成markdown
 ├── README.md
 └── shangfei  # 商飞数据例子
-    ├── shangfei_pdf
-    ├── shangfei_pdf_output
-    ├── shangfei_pdf_output_single
-    └── shangfei_pdf_single
+    ├── output
+    └── pdf
 ```
 
 ## 使用
 
-执行`pdf-structure.py`
+1.执行`pdf-structure.py`解析出pdf的结构，生成结构化的json文件
 
 ```
 python pdf-structure.py
@@ -92,7 +93,7 @@ python pdf-structure.py
 修改`args`参数列表即可
 ```
 args = {
-    '--image_dir': '/home/panjiancheng/llm-pdf-parsing/shangfei/shangfei_pdf_single',
+    '--image_dir': './shangfei/pdf',
     '--det_model_dir': './whl/det/ch/ch_PP-OCRv4_det_infer', 
     '--rec_model_dir': './whl/rec/ch/ch_PP-OCRv4_rec_infer',
     '--rec_char_dict_path': './PaddleOCR/ppocr/utils/ppocr_keys_v1.txt',
@@ -102,9 +103,23 @@ args = {
     '--layout_dict_path': './PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
     '--vis_font_path': './ppocr_img/fonts/simfang.ttf',
     '--recovery': 'False',
-    '--output': '/home/panjiancheng/llm-pdf-parsing/shangfei/shangfei_pdf_output_single',
+    '--output': './shangfei/out',
     '--use_gpu': 'False'
 }
+
+or 
+
+python ./PaddleOCR/ppstructure/predict_system.py --image_dir ./shangfei/pdf/ --det_model_dir ./inference/det/ch/ch_PP-OCRv4_det_infer --rec_model_dir ./inference/rec/ch/ch_PP-OCRv4_rec_infer --rec_char_dict_path ./PaddleOCR/ppocr/utils/ppocr_keys_v1.txt --table_model_dir ./inference/table/ch_ppstructure_mobile_v2.0_SLANet_infer --table_char_dict_path ./PaddleOCR/ppocr/utils/dict/table_structure_dict_ch.txt --layout_model_dir ./inference/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer --layout_dict_path ./PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt --recovery True --output ./shangfei/out/ --use_pdf2docx_api False --mode structure --return_word_box False --use_gpu True
+```
+2.执行`pos-process.py`对公式，图像，表格进行后处理，更新前一步骤生成的json文件
+```
+python pos-process.py --input_directory ./shangfei/out/structure
+```
+
+3.执行`json2markdown.py`将json文件转换成markdown格式
+
+```
+python json2markdown.py --directory_path ./shangfei/out/structure
 ```
 
 ## 任务
@@ -132,7 +147,6 @@ flag = 1
             section = doc.add_section(WD_SECTION.CONTINUOUS)
             section._sectPr.xpath("./w:cols")[0].set(qn("w:num"), "2")
             flag = 2
-
 ```
 
 3.公式识别问题，转换成latex格式
@@ -297,8 +311,6 @@ lines 内部包含：
         }
     ]
 }
-
-
 ```
 </details>
 
@@ -313,8 +325,26 @@ lines 内部包含：
 # 功能2：实现对表格到latex格式转换，修改对应json中的位置
 # 功能3：实现对图片到语义的格式转换，修改对应json中的位置.
 ```
+已经实现功能1
+
+12.效率评估(不包括模型加载时间)
+
+802页的PDF处理：飞机设计手册——第05册(民用飞机总体设计)
+
+GPU:
+
+| 程序             | 运行时间 |   |   |   |
+|------------------|----------|---|---|---|
+| pdf-structure.py | 00:08:07 |   |   |   |
+| pos-porcess.py   | 00:12:31 |   |   |   |
+| json2markdown.py | 可以忽略不计 |   |   |   |
+
+CPU:
 
 
+13.版面分析模型训练
+
+https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/ppstructure/layout/README_ch.md
 
 ## 感谢
 
