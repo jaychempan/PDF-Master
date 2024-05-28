@@ -83,8 +83,8 @@ def process_split_dir(split_dir):
     run_predict_system(updated_args)
 
 if __name__ == '__main__':
-    base_dir = './shangfei/all_pdf/'
-    num_splits = 2  # N
+    base_dir = './shangfei/pdfs'
+    num_splits = 8  # N
 
     # 获取PDF文件及其大小
     pdf_files_with_sizes = get_pdf_files_with_sizes(base_dir)
