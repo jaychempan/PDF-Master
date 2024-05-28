@@ -17,7 +17,7 @@ args = {
     '--use_pdf2docx_api': 'False',
     '--mode': 'structure',
     '--return_word_box': 'False',
-    '--use_gpu': 'False'
+    '--use_gpu': 'True'
 }
 
 def run_predict_system(args_dict):

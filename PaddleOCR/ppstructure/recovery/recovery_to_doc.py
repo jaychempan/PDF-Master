@@ -14,7 +14,7 @@
 
 import os
 from copy import deepcopy
-
+import json
 from ppstructure.recovery.table_process import HtmlToDocx
 
 from ppocr.utils.logging import get_logger
@@ -35,12 +35,14 @@ def cal_bbox(text_region):
     return bbox
 
 def convert_info_to_json(img, res, save_folder, img_name):
-    import json
     pdf_info = {
         "pdf_info": [],
         "_parse_type": "ocr"
     }
+    math_idx = -1
     page_idx = -1
+    table_idx = -1
+    fig_idx = -1
     for page in res:
         page_idx = page_idx + 1
         # 这里双栏pdf的话，就是把双栏变成单栏为一页
@@ -79,11 +81,14 @@ def convert_info_to_json(img, res, save_folder, img_name):
             
             ## 分类处理--一起处理处理图片和图片标题
             if region["type"].lower() == 'figure':
+
+                fig_idx = fig_idx + 1
                 image_block["blocks"].append({
                     "bbox": region["bbox"],
                     "type": "image_body",
                     "lines": [
                         {
+                            "fig_idx": fig_idx,
                             "bbox": region["bbox"],
                             "spans": [
                                 {
@@ -97,7 +102,7 @@ def convert_info_to_json(img, res, save_folder, img_name):
                     ]
                 })
                 # 如果下一个region不是image caption的话，就直接添加image_block,认为是没识别或者没有image_caption
-                if region_idx+1 <= len(page) and page[region_idx+1]["type"].lower() == 'figure_caption':
+                if region_idx+1 < len(page) and page[region_idx+1]["type"].lower() == 'figure_caption':
                     image_block["blocks"].append({
                             "bbox": cal_bbox(span["text_region"]),
                             "type": "image_caption", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
@@ -133,11 +138,13 @@ def convert_info_to_json(img, res, save_folder, img_name):
 
             ## 分类处理--一起处理处理表格和表格标题（但是可能还需要考虑后处理如何进行）
             elif region["type"].lower() == 'table':
+                table_idx = table_idx + 1
                 table_block["blocks"].append({
                     "bbox": region["bbox"],
                     "type": "table_body",
                     "lines": [
                         {
+                            "table_idx": table_idx,
                             "bbox": region["bbox"],
                             "spans": [
                                 {
@@ -152,7 +159,7 @@ def convert_info_to_json(img, res, save_folder, img_name):
                 })
 
                 # 如果下一个region不是table_caption的话，就直接添加image_block,认为是没识别或者没有image_caption
-                if region_idx+1 <= len(page) and page[region_idx+1]["type"].lower() == 'table_caption':
+                if region_idx+1 < len(page) and page[region_idx+1]["type"].lower() == 'table_caption':
                     table_block["blocks"].append({
                             "bbox": region["bbox"],
                             "type": "table_caption",
@@ -208,6 +215,7 @@ def convert_info_to_json(img, res, save_folder, img_name):
                 page_info["preproc_blocks"].append(block)
 
             elif region["type"].lower() == 'equation':
+                math_idx = math_idx + 1
                 block = {
                     "type": "interline_equation",
                     "bbox": region["bbox"],
@@ -216,6 +224,7 @@ def convert_info_to_json(img, res, save_folder, img_name):
                             "bbox": region["bbox"],
                             "spans": [
                                 {
+                                    "math_idx": math_idx,
                                     "bbox": region["bbox"],
                                     "content": [],
                                     "type": "interline_equation",
@@ -234,10 +243,12 @@ def convert_info_to_json(img, res, save_folder, img_name):
                 page_info["discarded_blocks"].append(block)
 
         pdf_info["pdf_info"].append(page_info)
-
+        math_idx = -1 # 当前页面处理完后进行重新初始化
+        table_idx = -1
+        fig_idx = -1
 
     # Save to JSON file
-    json_path = os.path.join(save_folder, f"{img_name}_ocr.json")
+    json_path = os.path.join(os.path.join(save_folder, img_name), f"{img_name}_ocr.json")
     with open(json_path, 'w', encoding='utf-8') as json_file:
         json.dump(pdf_info, json_file, ensure_ascii=False, indent=4)
     print(f"JSON saved to {json_path}")

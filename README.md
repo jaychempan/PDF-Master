@@ -110,10 +110,22 @@ args = {
 or 
 
 python ./PaddleOCR/ppstructure/predict_system.py --image_dir ./shangfei/pdf/ --det_model_dir ./inference/det/ch/ch_PP-OCRv4_det_infer --rec_model_dir ./inference/rec/ch/ch_PP-OCRv4_rec_infer --rec_char_dict_path ./PaddleOCR/ppocr/utils/ppocr_keys_v1.txt --table_model_dir ./inference/table/ch_ppstructure_mobile_v2.0_SLANet_infer --table_char_dict_path ./PaddleOCR/ppocr/utils/dict/table_structure_dict_ch.txt --layout_model_dir ./inference/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer --layout_dict_path ./PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt --recovery True --output ./shangfei/out/ --use_pdf2docx_api False --mode structure --return_word_box False --use_gpu True
+
+# 可以使用参数进行多线程处理，但是模型并不并行，并不能本质加快模型处理速度，如果需要并行处理可以使用pdf-structure-mu.py代码进行多进程处理分片的pdf实现加速。
+
+python ./PaddleOCR/ppstructure/predict_system.py --image_dir ./shangfei/pdf/ --det_model_dir ./inference/det/ch/ch_PP-OCRv4_det_infer --rec_model_dir ./inference/rec/ch/ch_PP-OCRv4_rec_infer --rec_char_dict_path ./PaddleOCR/ppocr/utils/ppocr_keys_v1.txt --table_model_dir ./inference/table/ch_ppstructure_mobile_v2.0_SLANet_infer --table_char_dict_path ./PaddleOCR/ppocr/utils/dict/table_structure_dict_ch.txt --layout_model_dir ./inference/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer --layout_dict_path ./PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt --recovery True --output ./shangfei/out/ --use_pdf2docx_api False --mode structure --return_word_box False --use_gpu True --use_mp True --total_process_num 8
+
+# pdf-structure-mu.py 对指定目录下的所有pdf文件进行分片处理（可以按照大小进行均等划分）,会多次调用predict_system函数
+
+python pdf-structure-mu.py
 ```
-2.执行`pos-process.py`对公式，图像，表格进行后处理，更新前一步骤生成的json文件
+2.执行`pos-process.py`对公式，图像，表格进行后处理，更新前一步骤生成的json文件（处理指定目录下的所有子目录中的json文件）
 ```
 python pos-process.py --input_directory ./shangfei/out/structure
+
+# 多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
+
+python pos-process-mu.py --input_directory ./shangfei/all_out/structure --config_path ./models/unimernet/demo.yaml --num_processes 2
 ```
 
 3.执行`json2markdown.py`将json文件转换成markdown格式
@@ -329,17 +341,14 @@ lines 内部包含：
 
 12.效率评估(不包括模型加载时间)
 
-802页的PDF处理：飞机设计手册——第05册(民用飞机总体设计)
+并行加速原理，根据文档大小进行排序或者直接N等份切分，尽可能分成大小相等的N份进行多进程处理。
+处理总共153 MB大小的pdf文件集可以获得
 
-GPU:
-
-| 程序             | 运行时间 |   |   |   |
-|------------------|----------|---|---|---|
-| pdf-structure.py | 00:08:07 |   |   |   |
-| pos-porcess.py   | 00:12:31 |   |   |   |
-| json2markdown.py | 可以忽略不计 |   |   |   |
-
-CPU:
+|     程序                                     |     运行时间（N=1）    |     运行时间（N=2）                       |     运行时间（N=8）    |     运行时间（CPU）    |
+|----------------------------------------------|------------------------|-------------------------------------------|------------------------|------------------------|
+|     pdf-structure.py     （按照大小分配）    |            -           |     约16   min（最后一个进程完成时间）    |            -           |            -           |
+|     pos-process.py（只包括行间公式插入）     |            -           |                      -                    |                        |            -           |
+|     json2markdown.py                         |            -           |                      -                    |            -           |           约1s         |
 
 
 13.版面分析模型训练

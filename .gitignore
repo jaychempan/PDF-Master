@@ -3,10 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-shangfei/
-models/
-UniMERNet/
-test_pdfs/
+shangfei/*
+models/*
+UniMERNet/*
+test_pdfs/*
 # C extensions
 *.so
 

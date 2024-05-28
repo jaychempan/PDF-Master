@@ -51,7 +51,7 @@ def process_one_block(page_info, markdown_content, page_idx, block_idx):
                     content = span['content']
                     if content.strip().endswith('.') or content.strip().endswith('\u3002'):
                         words = content.rsplit('.', 1)[0].lower().split()
-                        if words[-1] in ['fig', 'tab']:
+                        if len(words) != 0 and words[-1] in ['fig', 'tab']:
                             one_text += content + ' '
                         else:
                             one_text += content + '\n\n'

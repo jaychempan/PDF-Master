@@ -39,7 +39,6 @@ from ppstructure.utility import parse_args, draw_structure_result, cal_ocr_word_
 
 logger = get_logger()
 
-
 class StructureSystem(object):
     def __init__(self, args):
         self.mode = args.mode
@@ -279,24 +278,33 @@ def save_structure_res(res, save_folder, img_name, img_idx=0):
             roi_img = region.pop("img") # 将图片信息删除后的dict信息
             f.write("{}\n".format(json.dumps(region)))
 
+
             if region["type"].lower() == "table":
-                img_path = os.path.join(
+                # img_path = os.path.join(
+                #     excel_save_folder, "tables/{}_{}.jpg".format(img_idx, region["bbox"])
+                # )
+                cv2.imwrite(os.path.join(
                     excel_save_folder, "tables/{}_{}.jpg".format(img_idx, region["bbox"])
-                )
-                cv2.imwrite(img_path, roi_img)
+                ), roi_img)
 
             elif region["type"].lower() == "figure":
-                img_path = os.path.join(
+                # img_path = os.path.join(
+                #     # excel_save_folder, "figures/{}_{}.jpg".format(region["bbox"], img_idx)
+                #     excel_save_folder, "figures/{}_{}.jpg".format(img_idx, region["bbox"])
+                # )
+                cv2.imwrite(os.path.join(
                     # excel_save_folder, "figures/{}_{}.jpg".format(region["bbox"], img_idx)
                     excel_save_folder, "figures/{}_{}.jpg".format(img_idx, region["bbox"])
-                )
-                cv2.imwrite(img_path, roi_img)
+                ), roi_img)
             elif region["type"].lower() == "equation":
-                img_path = os.path.join(
+                # img_path = os.path.join(
+                #     # excel_save_folder, "figures/{}_{}.jpg".format(region["bbox"], img_idx)
+                #     excel_save_folder, "equations/{}_{}.jpg".format(img_idx, region["bbox"])
+                # )
+                cv2.imwrite(os.path.join(
                     # excel_save_folder, "figures/{}_{}.jpg".format(region["bbox"], img_idx)
                     excel_save_folder, "equations/{}_{}.jpg".format(img_idx, region["bbox"])
-                )
-                cv2.imwrite(img_path, roi_img)
+                ), roi_img)
 
 
 def main(args):
@@ -314,6 +322,12 @@ def main(args):
         logger.info("[{}/{}] {}".format(i, img_num, image_file))
         img, flag_gif, flag_pdf = check_and_read(image_file)
         img_name = os.path.basename(image_file).split(".")[0]
+
+        # 在处理pdf前进行判断，如果最终需要的json文件存在则跳过（表明已经处理过了）
+        json_path = os.path.join(os.path.join(save_folder, img_name), f"{img_name}_ocr.json")
+        if os.path.exists(json_path):
+            print("json文件存在,跳过处理")
+            continue
 
         if args.recovery and args.use_pdf2docx_api and flag_pdf:
             try_import("pdf2docx")
@@ -342,31 +356,31 @@ def main(args):
         for index, img in enumerate(imgs):
             res, time_dict = structure_sys(img, img_idx=index)
             # print(res) # 这里的res表示的每个bbox对应的图片信息，例如bbox信息，文本内容，置信度等
-            os.makedirs(os.path.join(save_folder, img_name) + '/shows/', exist_ok=True)
-            img_save_path = os.path.join(
-                save_folder, img_name, "shows/show_{}.jpg".format(index)
-            )
-            os.makedirs(os.path.join(save_folder, img_name), exist_ok=True)
-            if structure_sys.mode == "structure" and res != []:
+            # os.makedirs(os.path.join(save_folder, img_name) + '/shows/', exist_ok=True)
+            # img_save_path = os.path.join(
+            #     save_folder, img_name, "shows/show_{}.jpg".format(index)
+            # )
+            # os.makedirs(os.path.join(save_folder, img_name), exist_ok=True)
+            # if structure_sys.mode == "structure" and res != []:
                 # 绘制show文件,可以修改这个，让其不需要重建的另一半
                 # draw_img = draw_structure_result(img, res, args.vis_font_path)
                 # 保存res文件，可以整个一起报错
-                save_structure_res(res, save_folder, img_name, index)
-            elif structure_sys.mode == "kie":
-                if structure_sys.kie_predictor.predictor is not None:
-                    draw_img = draw_re_results(img, res, font_path=args.vis_font_path)
-                else:
-                    draw_img = draw_ser_results(img, res, font_path=args.vis_font_path)
+                # save_structure_res(res, save_folder, img_name, index)
+            # elif structure_sys.mode == "kie":
+            #     if structure_sys.kie_predictor.predictor is not None:
+            #         draw_img = draw_re_results(img, res, font_path=args.vis_font_path)
+            #     else:
+            #         draw_img = draw_ser_results(img, res, font_path=args.vis_font_path)
 
-                with open(
-                    os.path.join(save_folder, img_name, "res_{}_kie.txt".format(index)),
-                    "w",
-                    encoding="utf8",
-                ) as f:
-                    res_str = "{}\t{}\n".format(
-                        image_file, json.dumps({"ocr_info": res}, ensure_ascii=False)
-                    )
-                    f.write(res_str)
+            #     with open(
+            #         os.path.join(save_folder, img_name, "res_{}_kie.txt".format(index)),
+            #         "w",
+            #         encoding="utf8",
+            #     ) as f:
+            #         res_str = "{}\t{}\n".format(
+            #             image_file, json.dumps({"ocr_info": res}, ensure_ascii=False)
+            #         )
+            #         f.write(res_str)
             # if res != []:
             #     cv2.imwrite(img_save_path, draw_img)
             #     logger.info("result save to {}".format(img_save_path))
@@ -381,9 +395,14 @@ def main(args):
 
                 h, w, _ = img.shape
                 res = sorted_layout_boxes(res, w) # 这里完成对文章顺序的重新排列，尤其是对双栏的文档，为了保证排序的准确性这里还是不能进行合并
-                # all_res += res # 这里all_res是一整张列表
                 all_res.append(res) # 这里all_res里面包含多个子列表
-  
+
+        page_idx = -1
+        # 保存图像文件
+        for res in all_res:
+            page_idx = page_idx + 1
+            save_structure_res(res, save_folder, img_name, page_idx)
+
         if args.recovery and all_res != []:
             try:
                 # Example usage:
