@@ -41,8 +41,12 @@ def process_span(span, processor, base_path):
     image_path = span.get("image_path", "")
     image_path_ = os.path.normpath(os.path.join(base_path, image_path))
     content = span.get("content", "")
-    if image_path_:
+    if os.path.isfile(image_path_):
+        print(f"正在将图像转换为latex公式:{image_path_}")
         content = processor.process_single_image(image_path_)
+    else:
+        content = ""
+        print(f"文件不存在: {image_path_}")
     spa = {
         "bbox": span.get("bbox", []),
         "content": content,
@@ -91,20 +95,21 @@ def process_pdf_info(dir_path, file_path, processor):
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(processed_pdf_info, f, ensure_ascii=False, indent=4)
 
-def process_directory(root_dir, processor):
-    results = []
-    for root, dirs, files in os.walk(root_dir):
-        for dir_ in dirs:
-            dir_path = os.path.join(root, dir_)
-            print(f"dir_path:{dir_path}")
-            for _, _, files in os.walk(dir_path):
-                print(files)
-                for file in files:
-                    if file.endswith('.json'):
-                        file_path = os.path.join(dir_path, file)
-                        processed_pdf_info = process_pdf_info(dir_path, file_path, processor)
-                break
-        break
+def process_directory(input_directory, processor):
+    for root, _, files in os.walk(input_directory):
+        equations_path = os.path.join(root, 'equations')
+        # print(equations_path)
+        # # 判断 equations 文件是否存在且不为空
+        # if os.path.isfile(equations_path) and os.path.getsize(equations_path) == 0:
+        #     print(f"{equations_path} 文件为空，跳过处理。")
+        #     continue
+
+        for file in files:
+            if file.endswith('.json'):
+                file_path = os.path.join(root, file)
+                print(f"正在处理：{file_path}")
+                process_pdf_info(input_directory, file_path, processor)
+        break  # Ensure it only processes the input_directory itself
 
 # 主函数
 def main(input_directory, config_path):

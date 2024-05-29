@@ -118,6 +118,10 @@ python ./PaddleOCR/ppstructure/predict_system.py --image_dir ./shangfei/pdf/ --d
 # pdf-structure-mu.py 对指定目录下的所有pdf文件进行分片处理（可以按照大小进行均等划分）,会多次调用predict_system函数
 
 python pdf-structure-mu.py
+
+# 多卡多进程版本
+
+python pdf-structure-m.py
 ```
 2.执行`pos-process.py`对公式，图像，表格进行后处理，更新前一步骤生成的json文件（处理指定目录下的所有子目录中的json文件）
 ```
@@ -126,6 +130,11 @@ python pos-process.py --input_directory ./shangfei/out/structure
 # 多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
 
 python pos-process-mu.py --input_directory ./shangfei/all_out/structure --config_path ./models/unimernet/demo.yaml --num_processes 2
+
+# 多卡多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
+
+python pos-process-mgpu.py --input_directory ./shangfei/all_out/structure --config_path ./models/unimernet/demo.yaml --num_processes 2
+
 ```
 
 3.执行`json2markdown.py`将json文件转换成markdown格式
@@ -350,7 +359,6 @@ lines 内部包含：
 |     pos-process.py（只包括行间公式插入）     |            -           |                      -                    |             约18 min           |            -           |
 |     json2markdown.py                         |            -           |                      -                    |            -           |           约1s         |
 
-
 处理总共153 MB X4 大小的pdf文件集可以获得 2.44X4 MB大小的markdown文件（单卡A100 80G）
 
 |     程序                                     |     运行时间（N=1）    |     运行时间（N=8）                       |     运行时间（N=32）    |     运行时间（CPU）    |
@@ -358,6 +366,15 @@ lines 内部包含：
 |     pdf-structure.py     （按照大小分配）    |            -           |     约28   min  |            -           |            -           |
 |     pos-process.py（只包括行间公式插入）     |            -           |                      -                    |           约15   min             |            -           |
 |     json2markdown.py                         |            -           |                      -                    |            -           |           约2s         |
+
+处理总共153 MB X8 大小的pdf文件集可以获得 2.44X8 MB大小的markdown文件（8卡A100 80G）
+
+|     程序                                     |     运行时间（N=1）    |     运行时间（N=48）                       |     运行时间（N=32）    |     运行时间（CPU）    |
+|----------------------------------------------|------------------------|-------------------------------------------|------------------------|------------------------|
+|     pdf-structure.py     （按照大小分配）    |            -           |     约12min  |            -           |            -           |
+|     pos-process.py（只包括行间公式插入）     |            -           |                      -                    |           约XX   min             |            -           |
+|     json2markdown.py                         |            -           |                      -                    |            -           |           约2s         |
+
 
 13.版面分析模型训练
 

@@ -31,15 +31,21 @@ class ImageProcessor:
         image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
         output = self.model.generate({"image": image})
         pred = output["pred_str"][0]
+        # print("*************")
+        # print(pred)
         return pred
 
 def process_span(span, processor, base_path):
     image_path = span.get("image_path", "")
     image_path_ = os.path.normpath(os.path.join(base_path, image_path))
-    print(f"base:{image_path_}")
     content = span.get("content", "")
-    if image_path_:
+    # print(image_path_)
+    if os.path.isfile(image_path_):
+        print(f"正在将图像转换为latex公式:{image_path_}")
         content = processor.process_single_image(image_path_)
+    else:
+        content = ""
+        print(f"文件不存在: {image_path_}")
     return {
         "bbox": span.get("bbox", []),
         "content": content,
@@ -86,18 +92,20 @@ def process_directory(input_directory, processor):
         for file in files:
             if file.endswith('.json'):
                 file_path = os.path.join(root, file)
-                print(file_path)
+                print(f"正在处理：{file_path}")
                 process_pdf_info(input_directory, file_path, processor)
         break  # Ensure it only processes the input_directory itself
 
 def main(input_directory, config_path):
-    import time
+    # import time
     processor = ImageProcessor(config_path)
-    start_time = time.time()
+    # start_time = time.time()
     process_directory(input_directory, processor)
-    print(time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time)))
+    # print(time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time)))
 
 if __name__ == "__main__":
+    # import warnings
+    # warnings.filterwarnings('ignore')
     parser = argparse.ArgumentParser(
         description="Process JSON files in the specified directory"
     )
