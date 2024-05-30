@@ -27,6 +27,7 @@ def worker(directories, config_path):
 
 def main(input_directory, config_path, num_processes):
     dir_chunks = split_dirs(input_directory, num_processes)
+    
     # # 检查每个目录块，删除包含空的 equations 文件的目录块
     # dir_chunks = [chunk for chunk in dir_chunks if not is_equations_empty(chunk)]
 
@@ -34,8 +35,8 @@ def main(input_directory, config_path, num_processes):
         pool.starmap(worker, [(chunk, config_path) for chunk in dir_chunks])
 
 if __name__ == "__main__":
-    # import warnings
-    # warnings.filterwarnings('ignore')
+    import warnings
+    warnings.filterwarnings('ignore')
     import time
     start_time = time.time()
     parser = argparse.ArgumentParser(description="多进程处理目录下的子目录中的JSON文件")

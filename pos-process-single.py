@@ -104,8 +104,8 @@ def main(input_directory, config_path):
     # print(time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time)))
 
 if __name__ == "__main__":
-    # import warnings
-    # warnings.filterwarnings('ignore')
+    import warnings
+    warnings.filterwarnings('ignore')
     parser = argparse.ArgumentParser(
         description="Process JSON files in the specified directory"
     )
