@@ -16,12 +16,11 @@ args = {
     '--layout_dict_path': './PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
     '--vis_font_path': './ppocr_img/fonts/simfang.ttf',
     '--recovery': 'True',
-    '--output': './shangfei/more_out_6_new/',
+    '--output': './shangfei/all_out_newd/',
     '--use_pdf2docx_api': 'False',
     '--mode': 'structure',
     '--return_word_box': 'False',
-    '--use_gpu': 'True',
-    '--show_log': 'False'
+    '--use_gpu': 'True'
 }
 
 # 获取所有PDF文件及其大小
@@ -66,7 +65,7 @@ def update_args_with_split(args, split_dir):
     return args_copy
 
 # 执行预测系统
-def run_predict_system(args_dict, gpu_id):
+def run_predict_system(args_dict):
     command = ['python3', './PaddleOCR/ppstructure/predict_system.py']
     for key, value in args_dict.items():
         if not key.startswith('--'):
@@ -75,47 +74,33 @@ def run_predict_system(args_dict, gpu_id):
     
     # 为子进程设置独立的环境变量
     env = os.environ.copy()
-    env['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
     env['PROCESS_NAME'] = current_process().name
     
-    while True:
-        try:
-            subprocess.run(command, check=True, env=env)
-            break  # 成功运行则退出循环
-        except subprocess.CalledProcessError as e:
-            print("Retrying...")
+    subprocess.run(command, check=True, env=env)
 
-def process_split_dir(params):
-    split_dir, gpu_id = params
+def process_split_dir(split_dir):
     updated_args = update_args_with_split(args, split_dir)
-    run_predict_system(updated_args, gpu_id)
+    run_predict_system(updated_args)
 
 if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser(description="多进程处理目录下的子目录中的JSON文件")
-    parser.add_argument("--input_directory", type=str, required=True, help="指定目录下的所有子目录包含了json文件")
-    parser.add_argument("--num_processes", type=int, required=True, help="每张GPU卡分配的进程数")
-    args = parser.parse_args()
-
-    start_time = time.time()
-    base_dir = args.input_directory
-    num_splits = args.num_processes  # 每个GPU卡分配的进程数
-    gpus = [0, 1, 2, 3, 4, 5, 6, 7]  # 可用的GPU ID列表
+    import warnings
+    warnings.filterwarnings('ignore')
+    base_dir = './shangfei/pdfs_6'
+    num_splits = 6  # N
 
     # 获取PDF文件及其大小
     pdf_files_with_sizes = get_pdf_files_with_sizes(base_dir)
     
     # 按大小排序并分片
-    splits = split_pdf_files_by_size(pdf_files_with_sizes, len(gpus) * num_splits)
+    splits = split_pdf_files_by_size(pdf_files_with_sizes, num_splits)
     
     # 创建并移动文件到子目录
     split_dirs = create_and_move_files(base_dir, splits)
     
-    # 为每个分片指定GPU ID，确保每个GPU运行N个进程
-    split_gpu_pairs = [(split_dirs[i], gpus[i % len(gpus)]) for i in range(len(split_dirs))]
+    start_time = time.time()
 
-    with Pool(len(split_gpu_pairs)) as pool:
-        pool.map(process_split_dir, split_gpu_pairs)
+    with Pool(num_splits) as pool:
+        pool.map(process_split_dir, split_dirs)
 
     # 输出运行时间，时-分-秒
-    print(time.strftime("最终运行时间为：%H:%M:%S", time.gmtime(time.time() - start_time)))
+    print(time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time)))

@@ -39,6 +39,7 @@ pip install markdownify
 
 # 公式支持
 pip install --upgrade unimernet
+pip install transformers==4.40.0 # 需要确保transformers版本号
 sudo apt-get install libmagickwand-dev
 ```
 ## 目录结构
@@ -115,25 +116,29 @@ python ./PaddleOCR/ppstructure/predict_system.py --image_dir ./shangfei/pdf/ --d
 
 python ./PaddleOCR/ppstructure/predict_system.py --image_dir ./shangfei/pdf/ --det_model_dir ./inference/det/ch/ch_PP-OCRv4_det_infer --rec_model_dir ./inference/rec/ch/ch_PP-OCRv4_rec_infer --rec_char_dict_path ./PaddleOCR/ppocr/utils/ppocr_keys_v1.txt --table_model_dir ./inference/table/ch_ppstructure_mobile_v2.0_SLANet_infer --table_char_dict_path ./PaddleOCR/ppocr/utils/dict/table_structure_dict_ch.txt --layout_model_dir ./inference/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer --layout_dict_path ./PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt --recovery True --output ./shangfei/out/ --use_pdf2docx_api False --mode structure --return_word_box False --use_gpu True --use_mp True --total_process_num 8
 
-# pdf-structure-mu.py 对指定目录下的所有pdf文件进行分片处理（可以按照大小进行均等划分）,会多次调用predict_system函数
+# 单卡多进程版本
 
-python pdf-structure-mu.py
+pdf-structure-sgpu.py 对指定目录下的所有pdf文件进行分片处理（可以按照大小进行均等划分）,会多次调用predict_system函数
+
+# 多卡多进程版本（充分利用显卡资源的方式）
+
+python pdf-structure-mgpu.py --input_directory ./shangfei/more_outputs_x8_n6 --num_processes 6
 
 # 多卡多进程版本
 
-python pdf-structure-m.py
+python pdf-structure-mgpu.py
 ```
 2.执行`pos-process.py`对公式，图像，表格进行后处理，更新前一步骤生成的json文件（处理指定目录下的所有子目录中的json文件）
 ```
 python pos-process.py --input_directory ./shangfei/out/structure
 
-# 多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
+# 单卡多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
 
-python pos-process-mu.py --input_directory ./shangfei/all_out/structure --config_path ./models/unimernet/demo.yaml --num_processes 2
+python pos-process-sgpu.py --input_directory ./shangfei/more_outputs_x16_n6/structure --config_path ./models/unimernet/demo.yaml --num_processes 2
 
 # 多卡多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
 
-python pos-process-mgpu.py --input_directory ./shangfei/all_out/structure --config_path ./models/unimernet/demo.yaml --num_processes 2
+python pos-process-mgpu.py --input_directory ./shangfei/more_outputs_x16_n6/structure --config_path ./models/unimernet/demo.yaml --num_processes 12
 
 ```
 
@@ -371,8 +376,16 @@ lines 内部包含：
 
 |     程序                                     |     运行时间（N=1）    |     运行时间（N=48）                       |     运行时间（N=64）    |     运行时间（CPU）    |
 |----------------------------------------------|------------------------|-------------------------------------------|------------------------|------------------------|
-|     pdf-structure.py     （按照大小分配）    |            -           |     约12min  |            -           |            -           |
+|     pdf-structure.py     （按照大小分配）    |            -           |     约14min  |            -           |            -           |
 |     pos-process.py（只包括行间公式插入）     |            -           |                      -                    |           约27   min             |            -           |
+|     json2markdown.py                         |            -           |                      -                    |            -           |           约5s         |
+
+处理总共153 MB X16 大小的pdf文件集可以获得 2.44X16 MB大小的markdown文件（8卡A100 80G）
+
+|     程序                                     |     运行时间（N=1）    |     运行时间（N=48）                       |     运行时间（N=64）    |     运行时间（CPU）    |
+|----------------------------------------------|------------------------|-------------------------------------------|------------------------|------------------------|
+|     pdf-structure.py     （按照大小分配）    |            -           |     约22min  |            -           |            -           |
+|     pos-process.py（只包括行间公式插入）     |            -           |                      -                    |           约XX   min             |            -           |
 |     json2markdown.py                         |            -           |                      -                    |            -           |           约5s         |
 
 
@@ -384,7 +397,14 @@ https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/ppstructure/layout/RE
 
 另一种方案是采用现在开源项目中涉及到行间公式是被的模块进行嵌入到流程里面
 
-可以采用
+14.优化pos-process不同进程的处理数据划分，尽可能让所有进程处理等量的数据
+
+根据公式目录下的文件数量进行划分，尽可能每个进程的处理相等数量的公式，提高进程利用率，实现原理，可以在划分进程任务前对所有子目录（每个目录代表一个pdf文件）通过这种方式来实现对公式的读取，
+
+15.多模态大模型处理图像数据的方式
+
+
+
 
 ## 感谢
 

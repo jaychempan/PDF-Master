@@ -2,62 +2,97 @@ import os
 import argparse
 import multiprocessing as mp
 import subprocess
-import numpy as np
+import time
+import logging
+from queue import Queue, Empty
+
+# 配置日志记录
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def is_equations_empty(directory):
     equations_path = os.path.join(directory, 'equations')
-    # 检查目录是否存在且是目录
     if not os.path.isdir(equations_path):
-        return True  # 如果目录不存在，也视为空目录
-    # 列出目录中的文件和子目录，如果为空，则返回True
+        return True
     return not os.listdir(equations_path)
 
+def get_equation_files_count(directory):
+    equations_path = os.path.join(directory, 'equations')
+    if os.path.isdir(equations_path):
+        return len(os.listdir(equations_path))
+    return 0
 
 def split_dirs(input_directory, num_splits):
     dir_list = []
     for root, dirs, files in os.walk(input_directory):
         for dir_ in dirs:
-            if is_equations_empty(dir_):
-                dir_list.append(os.path.join(os.path.abspath(root), dir_))
+            dir_pth = os.path.join(os.path.abspath(root), dir_)
+            if not is_equations_empty(dir_pth):
+                dir_list.append(dir_pth)
         break  # 只处理顶级目录
-    return np.array_split(dir_list, num_splits)
+    dir_list = [(dir_, get_equation_files_count(dir_)) for dir_ in dir_list]
+    dir_list.sort(key=lambda x: x[1], reverse=True)
+    splits = [[] for _ in range(num_splits)]
+    file_counts = [0] * num_splits
 
-def worker(directories, config_path, gpu_ids):
-    for dir_path in directories:
+    for dir_, count in dir_list:
+        min_index = file_counts.index(min(file_counts))
+        splits[min_index].append(dir_)
+        file_counts[min_index] += count
+
+    return splits
+
+def worker(task_queue, config_path, gpu_id):
+    while True:
+        try:
+            dir_path = task_queue.get_nowait()
+        except Empty:
+            break
+
         cmd = [
             'python', 'pos-process-single.py', 
             '--input_directory', dir_path,
             '--config_path', config_path
         ]
-        
+        env = os.environ.copy()
+        env['CUDA_VISIBLE_DEVICES'] = gpu_id
+
         while True:
             try:
-                env = os.environ.copy()
-                env['CUDA_VISIBLE_DEVICES'] = gpu_ids
                 subprocess.run(cmd, check=True, env=env)
-                break  # 成功运行则退出循环
+                logging.info(f"Successfully processed directory: {dir_path}")
+                break
             except subprocess.CalledProcessError as e:
-                print(f"Error occurred while running the command: {e.cmd}")
-                print(f"Exit code: {e.returncode}")
-                print(f"Output: {e.output}")
-                print(f"Error: {e.stderr}")
-                print("Retrying...")
+                logging.error(f"Error occurred while running the command: {e.cmd}")
+                logging.error(f"Exit code: {e.returncode}")
+                logging.error(f"Output: {e.output}")
+                logging.error(f"Error: {e.stderr}")
+                logging.info(f"Retrying directory: {dir_path}")
+                time.sleep(5)  # 等待5秒后重试
 
 def main(input_directory, config_path, num_processes):
-    gpu_ids = "0,1,2,3,4,5,6,7"  # 设置可用的GPU列表
+    gpu_ids = "0,1,2,3,4,5,6,7"
     gpu_list = gpu_ids.split(",")
     num_gpus = len(gpu_list)
     
-    total_processes = num_processes * num_gpus  # 每张卡分配num_processes个进程
+    total_processes = num_processes * num_gpus
     dir_chunks = split_dirs(input_directory, total_processes)
 
-    pool_args = [(chunk, config_path, gpu_list[i % num_gpus]) for i, chunk in enumerate(dir_chunks)]
-    
-    with mp.Pool(processes=total_processes) as pool:
-        pool.starmap(worker, pool_args)
+    task_queue = Queue()
+    for chunk in dir_chunks:
+        for dir_path in chunk:
+            task_queue.put(dir_path)
+
+    processes = []
+    for i in range(total_processes):
+        gpu_id = gpu_list[i % num_gpus]
+        p = mp.Process(target=worker, args=(task_queue, config_path, gpu_id))
+        p.start()
+        processes.append(p)
+
+    for p in processes:
+        p.join()
 
 if __name__ == "__main__":
-    import time
     start_time = time.time()
     parser = argparse.ArgumentParser(description="多进程处理目录下的子目录中的JSON文件")
     parser.add_argument("--input_directory", type=str, required=True, help="指定目录下的所有子目录包含了json文件")
@@ -65,5 +100,4 @@ if __name__ == "__main__":
     parser.add_argument("--num_processes", type=int, required=True, help="每张GPU卡分配的进程数")
     args = parser.parse_args()
     main(args.input_directory, args.config_path, args.num_processes)
-    # 输出运行时间，时-分-秒
     print(time.strftime("最终运行时间为：%H:%M:%S", time.gmtime(time.time() - start_time)))

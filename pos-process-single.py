@@ -41,7 +41,7 @@ def process_span(span, processor, base_path):
     content = span.get("content", "")
     # print(image_path_)
     if os.path.isfile(image_path_):
-        print(f"正在将图像转换为latex公式:{image_path_}")
+        # print(f"正在将图像转换为latex公式:{image_path_}")
         content = processor.process_single_image(image_path_)
     else:
         content = ""
@@ -102,6 +102,7 @@ def main(input_directory, config_path):
     # start_time = time.time()
     process_directory(input_directory, processor)
     # print(time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time)))
+    print(f"处理完成：{file_path}")
 
 if __name__ == "__main__":
     import warnings
