@@ -5,9 +5,12 @@ from multiprocessing import Pool, current_process, Manager
 import shutil
 import copy
 import logging
+from datetime import datetime
 
 # 设置日志记录
-logging.basicConfig(filename='pdf-structure-mgpu-.log', level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
+timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+log_filename = f'pdf-structure-mgpu-{timestamp}.log'
+logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 
 # 定义参数字典
 args = {
@@ -20,12 +23,14 @@ args = {
     '--layout_dict_path': './PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
     '--vis_font_path': './ppocr_img/fonts/simfang.ttf',
     '--recovery': 'True',
-    '--output': './shangfei/more_outputs_x32_n6/',
+    '--output': './shangfei/commac_pdfs_0604/',
     '--use_pdf2docx_api': 'False',
     '--mode': 'structure',
     '--return_word_box': 'False',
     '--use_gpu': 'True',
-    '--show_log': 'False'
+    '--show_log': 'False',
+    '--use_mp': 'True',
+    '--table': 'False'
 }
 
 # 获取所有PDF文件及其大小

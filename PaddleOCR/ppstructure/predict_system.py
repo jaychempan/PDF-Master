@@ -61,15 +61,16 @@ class StructureSystem(object):
                     "When args.layout is false, args.ocr is automatically set to false"
                 )
             # init model
-            self.layout_predictor = None
-            self.text_system = None
+            self.layout_predictor = None # 重点
+            self.text_system = None # 重点
             self.table_system = None
             if args.layout:
                 self.layout_predictor = LayoutPredictor(args)
                 if args.ocr:
                     self.text_system = TextSystem(args)
-            if args.table:
+            if args.table: #不用表格解析，加快速度，因为表格是直接保存图片的方式
                 if self.text_system is not None:
+                    
                     self.table_system = TableSystem(
                         args,
                         self.text_system.text_detector,
@@ -415,11 +416,11 @@ def main(args):
                 # convert_info_markdown(img, all_res, save_folder, img_name)
                 # convert_info_docx(img, all_res, save_folder, img_name)
             except Exception as ex:
-                logger.error(
-                    "error in layout recovery image:{}, err msg: {}".format(
-                        image_file, ex
-                    )
-                )
+                # logger.error(
+                #     "error in layout recovery image:{}, err msg: {}".format(
+                #         image_file, ex
+                #     )
+                # )
                 continue
         # logger.info("Predict time : {:.3f}s".format(time_dict["all"]))
 

@@ -4,11 +4,14 @@ import multiprocessing as mp
 import subprocess
 import time
 import logging
-from queue import Queue, Empty
-from multiprocessing import Manager
+from queue import Empty
+from multiprocessing import Manager, Queue
+from datetime import datetime
 
-# 配置日志记录
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# 设置日志记录
+timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+log_filename = f'pos-process-mgpu-{timestamp}.log'
+logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 
 def is_equations_empty(directory):
     equations_path = os.path.join(directory, 'equations')
@@ -68,11 +71,6 @@ def worker(task_queue, config_path, gpu_id, retry_counter, time_counter):
                 break
             except subprocess.CalledProcessError as e:
                 retry_count += 1
-                logging.error(f"Error occurred while running the command: {e.cmd}")
-                logging.error(f"Exit code: {e.returncode}")
-                logging.error(f"Output: {e.output}")
-                logging.error(f"Error: {e.stderr}")
-                logging.info(f"Retrying directory: {dir_path}")
                 time.sleep(5)  # 等待5秒后重试
 
     end_time = time.time()
@@ -80,6 +78,14 @@ def worker(task_queue, config_path, gpu_id, retry_counter, time_counter):
     retry_counter[process_name] = retry_count
     time_counter[process_name] = (start_time, end_time, duration)
     logging.info(f"Process {process_name} started at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))}, ended at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(end_time))}, duration {time.strftime('%H:%M:%S', time.gmtime(duration))}, retries {retry_count}")
+
+def log_progress(retry_counter, time_counter, interval=60):
+    while True:
+        time.sleep(interval)
+        logging.info("Logging progress...")
+        for proc_name, retries in retry_counter.items():
+            start, end, duration = time_counter[proc_name]
+            logging.info(f"Progress Report - Process {proc_name} - Start: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start))}, End: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(end))}, Duration: {time.strftime('%H:%M:%S', time.gmtime(duration))}, Retries: {retries}")
 
 def main(input_directory, config_path, num_processes):
     gpu_ids = "0,1,2,3,4,5,6,7"
@@ -105,8 +111,13 @@ def main(input_directory, config_path, num_processes):
         p.start()
         processes.append(p)
 
+    logging_thread = mp.Process(target=log_progress, args=(retry_counter, time_counter))
+    logging_thread.start()
+
     for p in processes:
         p.join()
+
+    logging_thread.terminate()
 
     # 输出每个进程的重试次数和运行时间
     for proc_name, retries in retry_counter.items():

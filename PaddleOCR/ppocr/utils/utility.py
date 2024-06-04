@@ -118,26 +118,40 @@ def check_and_read(img_path):
         imgvalue = frame[:, :, ::-1]
         return imgvalue, True, False
     elif os.path.basename(img_path)[-3:].lower() == "pdf":
-        from paddle.utils import try_import
+        # from paddle.utils import try_import
 
-        fitz = try_import("fitz")
+        # fitz = try_import("fitz")
         from PIL import Image
-
+        from PyPDF2 import PdfFileReader
+        from pdf2image import convert_from_path
         imgs = []
-        with fitz.open(img_path) as pdf:
-            for pg in range(0, pdf.page_count):
-                page = pdf[pg]
-                mat = fitz.Matrix(2, 2)
-                pm = page.get_pixmap(matrix=mat, alpha=False)
-
-                # if width or height > 2000 pixels, don't enlarge the image
-                if pm.width > 2000 or pm.height > 2000:
-                    pm = page.get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False)
-
-                img = Image.frombytes("RGB", [pm.width, pm.height], pm.samples)
-                img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        try:
+            # Convert PDF to images, 如果显存会超的话，可以调整dpi
+            pages = convert_from_path(img_path, dpi=200)
+            
+            for page in pages:
+                img = np.array(page)
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 imgs.append(img)
+            
             return imgs, False, True
+        except Exception as e:
+            # print(f"Error reading PDF: {e}")
+            return None, False, False
+        # with fitz.open(img_path) as pdf:
+        #     for pg in range(0, pdf.page_count):
+        #         page = pdf[pg]
+        #         mat = fitz.Matrix(2, 2)
+        #         pm = page.get_pixmap(matrix=mat, alpha=False)
+
+        #         # if width or height > 2000 pixels, don't enlarge the image
+        #         if pm.width > 2000 or pm.height > 2000:
+        #             pm = page.get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False)
+
+        #         img = Image.frombytes("RGB", [pm.width, pm.height], pm.samples)
+        #         img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        #         imgs.append(img)
+        #     return imgs, False, True
     return None, False, False
 
 

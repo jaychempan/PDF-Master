@@ -5,14 +5,14 @@
 
 PDF解析：进行版面识别得到结构化的json输出，然后对一些难处理的图片表格等进行后处理（生成markdown格式）
 
-
 > 项目版本提交命令
 
 ```
 git add .
 git commit -m 'init llm-pdf-parsing'
 git push origin main
-可以简化成：
+
+可以简化成:
 git commit -am 'init llm-pdf-parsing'
 git push origin main
 
@@ -426,7 +426,11 @@ python pos-process-mgpu.py --input_directory ./shangfei/outputs_x8_n6/structure 
 |     json2markdown.py                         |            -           |                      -                    |            -           |           约5s         |
 
 
+15. 修改pdf读取bug，使用PyMuPDF读取会出现一些pdf解析错误，修改成使用其他函数
 
+```
+pip install pypdf2 pdf2image pillow
+```
 
 ## 感谢
 
