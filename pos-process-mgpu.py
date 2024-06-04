@@ -5,6 +5,7 @@ import subprocess
 import time
 import logging
 from queue import Queue, Empty
+from multiprocessing import Manager
 
 # 配置日志记录
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -41,7 +42,11 @@ def split_dirs(input_directory, num_splits):
 
     return splits
 
-def worker(task_queue, config_path, gpu_id):
+def worker(task_queue, config_path, gpu_id, retry_counter, time_counter):
+    process_name = mp.current_process().name
+    start_time = time.time()
+    retry_count = 0
+
     while True:
         try:
             dir_path = task_queue.get_nowait()
@@ -62,12 +67,19 @@ def worker(task_queue, config_path, gpu_id):
                 logging.info(f"Successfully processed directory: {dir_path}")
                 break
             except subprocess.CalledProcessError as e:
+                retry_count += 1
                 logging.error(f"Error occurred while running the command: {e.cmd}")
                 logging.error(f"Exit code: {e.returncode}")
                 logging.error(f"Output: {e.output}")
                 logging.error(f"Error: {e.stderr}")
                 logging.info(f"Retrying directory: {dir_path}")
                 time.sleep(5)  # 等待5秒后重试
+
+    end_time = time.time()
+    duration = end_time - start_time
+    retry_counter[process_name] = retry_count
+    time_counter[process_name] = (start_time, end_time, duration)
+    logging.info(f"Process {process_name} started at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))}, ended at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(end_time))}, duration {time.strftime('%H:%M:%S', time.gmtime(duration))}, retries {retry_count}")
 
 def main(input_directory, config_path, num_processes):
     gpu_ids = "0,1,2,3,4,5,6,7"
@@ -82,15 +94,25 @@ def main(input_directory, config_path, num_processes):
         for dir_path in chunk:
             task_queue.put(dir_path)
 
+    manager = Manager()
+    retry_counter = manager.dict()
+    time_counter = manager.dict()
+
     processes = []
     for i in range(total_processes):
         gpu_id = gpu_list[i % num_gpus]
-        p = mp.Process(target=worker, args=(task_queue, config_path, gpu_id))
+        p = mp.Process(target=worker, args=(task_queue, config_path, gpu_id, retry_counter, time_counter))
         p.start()
         processes.append(p)
 
     for p in processes:
         p.join()
+
+    # 输出每个进程的重试次数和运行时间
+    for proc_name, retries in retry_counter.items():
+        start, end, duration = time_counter[proc_name]
+        logging.info(f"Process {proc_name} - Start: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start))}, End: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(end))}, Duration: {time.strftime('%H:%M:%S', time.gmtime(duration))}, Retries: {retries}")
+        print(f"Process {proc_name} - Start: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start))}, End: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(end))}, Duration: {time.strftime('%H:%M:%S', time.gmtime(duration))}, Retries: {retries}")
 
 if __name__ == "__main__":
     start_time = time.time()
@@ -100,4 +122,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_processes", type=int, required=True, help="每张GPU卡分配的进程数")
     args = parser.parse_args()
     main(args.input_directory, args.config_path, args.num_processes)
-    print(time.strftime("最终运行时间为：%H:%M:%S", time.gmtime(time.time() - start_time)))
+    end_time = time.time()
+    duration = end_time - start_time
+    logging.info(f"最终运行时间为：{time.strftime('%H:%M:%S', time.gmtime(duration))}")
+    print(f"最终运行时间为：{time.strftime('%H:%M:%S', time.gmtime(duration))}")

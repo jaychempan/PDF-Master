@@ -102,7 +102,7 @@ def main(input_directory, config_path):
     # start_time = time.time()
     process_directory(input_directory, processor)
     # print(time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time)))
-    print(f"处理完成：{file_path}")
+    # print(f"处理完成：{file_path}")
 
 if __name__ == "__main__":
     import warnings

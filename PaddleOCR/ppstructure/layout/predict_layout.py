@@ -126,17 +126,17 @@ def main(args):
         if not flag:
             img = cv2.imread(image_file)
         if img is None:
-            logger.info("error in loading image:{}".format(image_file))
+            # logger.info("error in loading image:{}".format(image_file))
             continue
 
         layout_res, elapse = layout_predictor(img)
 
-        logger.info("result: {}".format(layout_res))
+        # logger.info("result: {}".format(layout_res))
 
         if count > 0:
             total_time += elapse
         count += 1
-        logger.info("Predict time of {}: {}".format(image_file, elapse))
+        # logger.info("Predict time of {}: {}".format(image_file, elapse))
 
 
 if __name__ == "__main__":

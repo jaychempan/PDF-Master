@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from tqdm import tqdm
 import os
 import sys
 import subprocess
@@ -318,15 +318,20 @@ def main(args):
         os.makedirs(save_folder, exist_ok=True)
     img_num = len(image_file_list)
 
-    for i, image_file in enumerate(image_file_list):
-        logger.info("[{}/{}] {}".format(i, img_num, image_file))
+    # for i, image_file in enumerate(image_file_list):
+    #     # logger.info("[{}/{}] {}".format(i, img_num, image_file))
+    #     img, flag_gif, flag_pdf = check_and_read(image_file)
+    #     img_name = os.path.basename(image_file).split(".")[0]
+
+    # 使用 tqdm 进行进度可视化
+    for i, image_file in enumerate(tqdm(image_file_list, desc="Processing Images", position=0, leave=True)):
         img, flag_gif, flag_pdf = check_and_read(image_file)
         img_name = os.path.basename(image_file).split(".")[0]
 
         # 在处理pdf前进行判断，如果最终需要的json文件存在则跳过（表明已经处理过了）
         json_path = os.path.join(os.path.join(save_folder, img_name), f"{img_name}_ocr.json")
         if os.path.exists(json_path):
-            print("json文件存在,跳过处理")
+            # print(f"json文件存在,跳过处理: {json_path}")
             continue
 
         if args.recovery and args.use_pdf2docx_api and flag_pdf:
@@ -338,7 +343,7 @@ def main(args):
             cv = Converter(image_file)
             cv.convert(docx_file)
             cv.close()
-            logger.info("docx save to {}".format(docx_file))
+            # logger.info("docx save to {}".format(docx_file))
             continue
 
         if not flag_gif and not flag_pdf:
@@ -346,7 +351,7 @@ def main(args):
 
         if not flag_pdf:
             if img is None:
-                logger.error("error in loading image:{}".format(image_file))
+                # logger.error("error in loading image:{}".format(image_file))
                 continue
             imgs = [img]
         else:
@@ -416,7 +421,7 @@ def main(args):
                     )
                 )
                 continue
-        logger.info("Predict time : {:.3f}s".format(time_dict["all"]))
+        # logger.info("Predict time : {:.3f}s".format(time_dict["all"]))
 
 
 if __name__ == "__main__":

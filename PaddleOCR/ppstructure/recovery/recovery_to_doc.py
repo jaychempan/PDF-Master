@@ -251,7 +251,7 @@ def convert_info_to_json(img, res, save_folder, img_name):
     json_path = os.path.join(os.path.join(save_folder, img_name), f"{img_name}_ocr.json")
     with open(json_path, 'w', encoding='utf-8') as json_file:
         json.dump(pdf_info, json_file, ensure_ascii=False, indent=4)
-    print(f"JSON saved to {json_path}")
+    # print(f"JSON saved to {json_path}")
 
 
 
@@ -318,7 +318,7 @@ def convert_info_markdown(img, res, save_folder, img_name):
     markdown_path = os.path.join(save_folder, f"{img_name}_ocr.md")
     with open(markdown_path, 'w', encoding='utf-8') as md_file:
         md_file.write("\n".join(markdown_content))
-    print(f"Markdown saved to {markdown_path}")
+    # print(f"Markdown saved to {markdown_path}")
 
 
 # 转换成docx格式
@@ -382,7 +382,7 @@ def convert_info_docx(img, res, save_folder, img_name):
     # save to docx
     docx_path = os.path.join(save_folder, "{}_ocr.docx".format(img_name))
     doc.save(docx_path)
-    logger.info("docx save to {}".format(docx_path))
+    # logger.info("docx save to {}".format(docx_path))
 
 
 def sorted_layout_boxes(res, w):

@@ -122,11 +122,9 @@ pdf-structure-sgpu.py 对指定目录下的所有pdf文件进行分片处理（�
 
 # 多卡多进程版本（充分利用显卡资源的方式）
 
-python pdf-structure-mgpu.py --input_directory ./shangfei/more_outputs_x8_n6 --num_processes 6
-
-# 多卡多进程版本
-
-python pdf-structure-mgpu.py
+python pdf-structure-mgpu.py --input_directory ./shangfei/more_pdfs_x8_n6 --num_processes 6
+or,
+python pdf-structure-mgpu.py --input_directory ./shangfei/more_pdfs_x8_n7 --num_processes 7
 ```
 2.执行`pos-process.py`对公式，图像，表格进行后处理，更新前一步骤生成的json文件（处理指定目录下的所有子目录中的json文件）
 ```
@@ -388,7 +386,6 @@ lines 内部包含：
 |     pos-process.py（只包括行间公式插入）     |            -           |                      -                    |           约XX   min             |            -           |
 |     json2markdown.py                         |            -           |                      -                    |            -           |           约5s         |
 
-
 13.版面分析模型训练
 
 一种方案重新训练一个高精度的可以识别出公式的layout模型（但是需要重新训练）
@@ -397,11 +394,36 @@ https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/ppstructure/layout/RE
 
 另一种方案是采用现在开源项目中涉及到行间公式是被的模块进行嵌入到流程里面
 
-14.优化pos-process不同进程的处理数据划分，尽可能让所有进程处理等量的数据
+14.（已完成）优化pos-process不同进程的处理数据划分，尽可能让所有进程处理等量的数据
 
-根据公式目录下的文件数量进行划分，尽可能每个进程的处理相等数量的公式，提高进程利用率，实现原理，可以在划分进程任务前对所有子目录（每个目录代表一个pdf文件）通过这种方式来实现对公式的读取，
+根据公式目录下的文件数量进行划分，尽可能每个进程的处理相等数量的公式，提高进程利用率，实现原理，可以在划分进程任务前对所有子目录（每个目录代表一个pdf文件）通过这种方式来实现对公式的读取。
 
-15.多模态大模型处理图像数据的方式
+15.（待做）多模态大模型处理图像数据的方式
+
+搭建环境参考[[InterVL]](https://github.com/OpenGVLab/InternVL/tree/main)内的方式
+```
+# local 本地运行调用卡进行计算
+python internvl-infer.py --model_path ./models/InternVL-Chat-V1-5 --root_directory /path/to/subdirs/ --csv_save_path 
+
+# lmdeploy 构建仿openai进行处理
+
+python internvl-infer-openai.py --api_key XXX --base_url XXX --model_name "internvl-internlm2" --input_dir XXX --output_dir XXX/csv
+```
+
+14.时间以及资源测试 (处理总共153X8 MB 大小的pdf文件集可以获得 2.44X8 MB大小的markdown文件（8卡A100 80G）)
+
+`srun -p app-rag-agent --nodes=1  --gres=gpu:8 --ntasks-per-node=8 --pty bash -i`
+
+```
+python pdf-structure-mgpu.py --input_directory ./shangfei/pdfs_x8_n6 --num_processes 6
+python pos-process-mgpu.py --input_directory ./shangfei/outputs_x8_n6/structure --config_path ./models/unimernet/demo.yaml --num_processes 12
+```
+
+|     程序                                     |     运行时间（N=1）    |     运行时间（N=48）                       |     运行时间（N=96）    |     运行时间（CPU）    |
+|----------------------------------------------|------------------------|-------------------------------------------|------------------------|------------------------|
+|     pdf-structure.py    |            -           |     00:11:28  |            -           |            -           |
+|     pos-process.py     |            -           |                      -                    |           约XX   min             |            -           |
+|     json2markdown.py                         |            -           |                      -                    |            -           |           约5s         |
 
 
 
@@ -413,6 +435,8 @@ https://github.com/opendatalab/UniMERNet
 https://github.com/PaddlePaddle/PaddleOCR/tree/main
 
 https://github.com/PaddlePaddle/PaddleOCR/blob/main/ppstructure/README_ch.md
+
+https://github.com/OpenGVLab/InternVL/tree/main
 
 ## 版权
 
