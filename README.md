@@ -418,6 +418,7 @@ python internvl-infer-openai.py --api_key XXX --base_url XXX --model_name "inter
 python pdf-structure-mgpu.py --input_directory ./shangfei/pdfs_x8_n6 --num_processes 6
 python pos-process-mgpu.py --input_directory ./shangfei/outputs_x8_n6/structure --config_path ./models/unimernet/demo.yaml --num_processes 12
 ```
+pos-process.py 进程被杀掉不知道真实事件
 
 |     程序                                     |     运行时间（N=1）    |     运行时间（N=48）                       |     运行时间（N=96）    |     运行时间（CPU）    |
 |----------------------------------------------|------------------------|-------------------------------------------|------------------------|------------------------|
@@ -431,6 +432,29 @@ python pos-process-mgpu.py --input_directory ./shangfei/outputs_x8_n6/structure 
 ```
 pip install pypdf2 pdf2image pillow
 ```
+
+16.在8卡A100 80G上对约 8GB 领域数据实际处理速度，主要对pdf文档进行解析（7.3G），Doc转PDF遇到问题目前不进行处理
+
+PDF文件数：19269，大小：7.30GB DOC文件数：6，大小：0.14GB DOCX文件数：0，大小：0.00GB
+
+```
+python pdf-structure-mgpu.py --input_directory /mnt/petrelfs/shengkejun/project_data/COMAC_pretrain_data/comac_pdfs/ --num_processes 6
+
+python pos-process-mgpu.py --input_directory /mnt/petrelfs/panjiancheng/llm-pdf-parsing/shangfei/commac_pdfs_0604/structure --config_path ./models/unimernet/demo.yaml --num_processes 12
+
+python json2markdown.py --directory_path /mnt/petrelfs/panjiancheng/llm-pdf-parsing/shangfei/commac_pdfs_0604/structure
+```
+
+时间花费如下：
+
+|     程序                                     |     运行时间（N=1）    |     运行时间（N=48）                       |     运行时间（N=128）    |     运行时间（CPU）    |
+|----------------------------------------------|------------------------|-------------------------------------------|------------------------|------------------------|
+|     pdf-structure.py    |            -           |     01:36:58  |            -           |            -           |
+|     pos-process.py     |            -           |                      -                    |           01:15:00(存在bug，可能需要解决bug后确定)             |            -           |
+|     json2markdown.py                         |            -           |                      -                    |            -           |           00:02:10         |
+
+
+
 
 ## 感谢
 
