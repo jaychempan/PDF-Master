@@ -40,12 +40,10 @@ def process_span(span, processor, base_path):
     image_path_ = os.path.normpath(os.path.join(base_path, image_path))
     content = span.get("content", "")
     # print(image_path_)
-    if os.path.isfile(image_path_):
+    if content == "" and os.path.isfile(image_path_):
         # print(f"正在将图像转换为latex公式:{image_path_}")
         content = processor.process_single_image(image_path_)
-    else:
-        content = ""
-        print(f"文件不存在: {image_path_}")
+
     return {
         "bbox": span.get("bbox", []),
         "content": content,

@@ -4,13 +4,12 @@ import multiprocessing as mp
 import subprocess
 import time
 import logging
-from queue import Empty
-from multiprocessing import Manager, Queue
 from datetime import datetime
+from tqdm import tqdm
 
 # 设置日志记录
 timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-log_filename = f'pos-process-mgpu-{timestamp}.log'
+log_filename = f'logs/pos-process-mgpu-{timestamp}.log'
 logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 
 def is_equations_empty(directory):
@@ -45,33 +44,26 @@ def split_dirs(input_directory, num_splits):
 
     return splits
 
-def worker(task_queue, config_path, gpu_id, retry_counter, time_counter):
+def worker(task_list, config_path, gpu_id, retry_counter, time_counter, progress_queue):
     process_name = mp.current_process().name
     start_time = time.time()
     retry_count = 0
 
-    while True:
-        try:
-            dir_path = task_queue.get_nowait()
-        except Empty:
-            break
-
-        cmd = [
-            'python', 'pos-process-single.py', 
-            '--input_directory', dir_path,
-            '--config_path', config_path
-        ]
-        env = os.environ.copy()
-        env['CUDA_VISIBLE_DEVICES'] = gpu_id
-
-        while True:
+    for dir_path in task_list:
+        command = f"CUDA_VISIBLE_DEVICES={gpu_id} python pos-process-single.py --input_directory {dir_path} --config_path {config_path}"
+        
+        task_completed = False
+        while not task_completed:  # 使用标志变量来控制重试
             try:
-                subprocess.run(cmd, check=True, env=env)
+                with open(os.devnull, 'w') as devnull:  # 重定向输出到/dev/null
+                    subprocess.run(command, check=True, shell=True, stdout=devnull, stderr=devnull)
                 logging.info(f"Successfully processed directory: {dir_path}")
-                break
+                task_completed = True  # 任务成功，设置标志变量
             except subprocess.CalledProcessError as e:
                 retry_count += 1
                 time.sleep(5)  # 等待5秒后重试
+
+        progress_queue.put(1)  # 任务处理完成后，更新进度
 
     end_time = time.time()
     duration = end_time - start_time
@@ -87,6 +79,16 @@ def log_progress(retry_counter, time_counter, interval=60):
             start, end, duration = time_counter[proc_name]
             logging.info(f"Progress Report - Process {proc_name} - Start: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start))}, End: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(end))}, Duration: {time.strftime('%H:%M:%S', time.gmtime(duration))}, Retries: {retries}")
 
+def progress_monitor(total_tasks, progress_queue):
+    with tqdm(total=total_tasks) as pbar:
+        while total_tasks > 0:
+            try:
+                progress_queue.get(timeout=0.1)
+                pbar.update(1)
+                total_tasks -= 1
+            except:
+                pass
+
 def main(input_directory, config_path, num_processes):
     gpu_ids = "0,1,2,3,4,5,6,7"
     gpu_list = gpu_ids.split(",")
@@ -94,30 +96,32 @@ def main(input_directory, config_path, num_processes):
     
     total_processes = num_processes * num_gpus
     dir_chunks = split_dirs(input_directory, total_processes)
+    total_tasks = sum(len(chunk) for chunk in dir_chunks)
 
-    task_queue = Queue()
-    for chunk in dir_chunks:
-        for dir_path in chunk:
-            task_queue.put(dir_path)
-
-    manager = Manager()
+    manager = mp.Manager()
     retry_counter = manager.dict()
     time_counter = manager.dict()
+    progress_queue = manager.Queue()
 
     processes = []
     for i in range(total_processes):
         gpu_id = gpu_list[i % num_gpus]
-        p = mp.Process(target=worker, args=(task_queue, config_path, gpu_id, retry_counter, time_counter))
+        task_list = dir_chunks[i]
+        p = mp.Process(target=worker, args=(task_list, config_path, gpu_id, retry_counter, time_counter, progress_queue))
         p.start()
         processes.append(p)
 
     logging_thread = mp.Process(target=log_progress, args=(retry_counter, time_counter))
     logging_thread.start()
 
+    monitor_thread = mp.Process(target=progress_monitor, args=(total_tasks, progress_queue))
+    monitor_thread.start()
+
     for p in processes:
         p.join()
 
     logging_thread.terminate()
+    monitor_thread.terminate()
 
     # 输出每个进程的重试次数和运行时间
     for proc_name, retries in retry_counter.items():

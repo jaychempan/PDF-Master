@@ -8,6 +8,7 @@ models/*
 UniMERNet/*
 test_pdfs/*
 Pix2Text/*
+logs/*
 
 # C extensions
 *.so

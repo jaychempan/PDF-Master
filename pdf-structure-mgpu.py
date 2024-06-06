@@ -9,7 +9,7 @@ from datetime import datetime
 
 # 设置日志记录
 timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-log_filename = f'pdf-structure-mgpu-{timestamp}.log'
+log_filename = f'logs/pdf-structure-mgpu-{timestamp}.log'
 logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 
 # 定义参数字典

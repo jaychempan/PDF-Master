@@ -136,7 +136,9 @@ def check_and_read(img_path):
             
             return imgs, False, True
         except Exception as e:
-            # print(f"Error reading PDF: {e}")
+            # print(f"Error reading PDF for {img_path}: {e}")
+            with open("error_log.txt", "a") as log_file:
+                log_file.write(f"{img_path}\n")
             return None, False, False
         # with fitz.open(img_path) as pdf:
         #     for pg in range(0, pdf.page_count):
