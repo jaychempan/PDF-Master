@@ -110,6 +110,8 @@ args = {
 
 or 
 
+python ./PaddleOCR/ppstructure/predict_system_debug.py --image_dir ./shangfei/pdf/ --det_model_dir ./inference/det/ch/ch_PP-OCRv4_det_infer --rec_model_dir ./inference/rec/ch/ch_PP-OCRv4_rec_infer --rec_char_dict_path ./PaddleOCR/ppocr/utils/ppocr_keys_v1.txt --table_model_dir ./inference/table/ch_ppstructure_mobile_v2.0_SLANet_infer --table_char_dict_path ./PaddleOCR/ppocr/utils/dict/table_structure_dict_ch.txt --layout_model_dir ./inference/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer --layout_dict_path ./PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt --recovery True --output ./shangfei/out/ --use_pdf2docx_api False --mode structure --return_word_box False --use_gpu True
+
 python ./PaddleOCR/ppstructure/predict_system.py --image_dir ./shangfei/pdf/ --det_model_dir ./inference/det/ch/ch_PP-OCRv4_det_infer --rec_model_dir ./inference/rec/ch/ch_PP-OCRv4_rec_infer --rec_char_dict_path ./PaddleOCR/ppocr/utils/ppocr_keys_v1.txt --table_model_dir ./inference/table/ch_ppstructure_mobile_v2.0_SLANet_infer --table_char_dict_path ./PaddleOCR/ppocr/utils/dict/table_structure_dict_ch.txt --layout_model_dir ./inference/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer --layout_dict_path ./PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt --recovery True --output ./shangfei/out/ --use_pdf2docx_api False --mode structure --return_word_box False --use_gpu True
 
 # 可以使用参数进行多线程处理，但是模型并不并行，并不能本质加快模型处理速度，如果需要并行处理可以使用pdf-structure-mu.py代码进行多进程处理分片的pdf实现加速。
@@ -132,11 +134,11 @@ python pos-process.py --input_directory ./shangfei/out/structure
 
 # 单卡多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
 
-python pos-process-sgpu.py --input_directory ./shangfei/more_outputs_x16_n6/structure --config_path ./models/unimernet/demo.yaml --num_processes 2
+python pos-process-sgpu.py --input_directory shangfei/out/structure  --config_path UniMERNet/configs/demo.yaml --num_processes 2
 
 # 多卡多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
 
-python pos-process-mgpu.py --input_directory ./shangfei/more_outputs_x16_n6/structure --config_path ./models/unimernet/demo.yaml --num_processes 12
+python pos-process-mgpu.py --input_directory ./shangfei/more_outputs_x16_n6/structure --config_path UniMERNet/configs/demo.yaml --num_processes 12
 
 ```
 

@@ -104,7 +104,7 @@ def convert_info_to_json(img, res, save_folder, img_name):
                 # 如果下一个region不是image caption的话，就直接添加image_block,认为是没识别或者没有image_caption
                 if region_idx+1 < len(page) and page[region_idx+1]["type"].lower() == 'figure_caption':
                     image_block["blocks"].append({
-                            "bbox": region["bbox"],
+                            "bbox": cal_bbox(span["text_region"]),
                             "type": "image_caption", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
                             "lines": []
                         })
@@ -115,7 +115,7 @@ def convert_info_to_json(img, res, save_folder, img_name):
                             "spans": [
                                 {
                                     "bbox": cal_bbox(span["text_region"]),
-                                    "content": span["text"],
+                                    "content": span["text"] if "text" in span else span["embedding"],
                                     "type": "text", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
                                 }
                             ]
@@ -202,16 +202,55 @@ def convert_info_to_json(img, res, save_folder, img_name):
                 "lines": []
                 }
                 for span in region["res"]:
-                    block["lines"].append({
-                        "bbox": region["bbox"],
-                        "spans": [
-                            {
-                                "bbox": region["bbox"],
-                                "content": span["text"],
-                                "type": "text", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+                    if 'embedding' in span:
+
+                        page_info["preproc_blocks"].append(block)
+
+                        math_idx = math_idx + 1
+                        x_coords = [point[0] for point in span['text_region']]
+                        y_coords = [point[1] for point in span['text_region']]
+                        x1 = min(x_coords)  # 使用内置的 min 函数来找到最小 x 坐标
+                        y1 = min(y_coords)  # 使用内置的 min 函数来找到最小 y 坐标
+                        x2 = max(x_coords)  # 使用内置的 max 函数来找到最大 x 坐标
+                        y2 = max(y_coords)  # 使用内置的 max 函数来找到最大 y 坐标
+                        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                        bbox = [x1, y1, x2, y2]
+                        block = {
+                            "type": "interline_equation",
+                            "bbox": region["bbox"],
+                            "lines": [
+                                {
+                                    "bbox": region["bbox"],
+                                    "spans": [
+                                        {
+                                            "math_idx": math_idx,
+                                            "bbox": region["bbox"],
+                                            "content": [],
+                                            "type": "embedding",
+                                            "image_path": "./equations/{}_{}.jpg".format(page_idx, bbox)
+                                        }]}
+                            ]
                             }
-                        ]
-                    })
+                        page_info["preproc_blocks"].append(block)
+                        page_info["interline_equations"].append(block)
+
+                        block = {
+                "type": region["type"].lower(),
+                "bbox": region["bbox"],
+                "lines": []
+                }
+                        continue
+                    else:
+                        block["lines"].append({
+                            "bbox": region["bbox"],
+                            "spans": [
+                                {
+                                    "bbox": region["bbox"],
+                                    "content": span["text"],
+                                    "type": "text", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
+                                }
+                            ]
+                        })
                 page_info["preproc_blocks"].append(block)
 
             elif region["type"].lower() == 'equation':
@@ -251,7 +290,7 @@ def convert_info_to_json(img, res, save_folder, img_name):
     json_path = os.path.join(os.path.join(save_folder, img_name), f"{img_name}_ocr.json")
     with open(json_path, 'w', encoding='utf-8') as json_file:
         json.dump(pdf_info, json_file, ensure_ascii=False, indent=4)
-    # print(f"JSON saved to {json_path}")
+    print(f"JSON saved to {json_path}")
 
 
 
@@ -318,7 +357,7 @@ def convert_info_markdown(img, res, save_folder, img_name):
     markdown_path = os.path.join(save_folder, f"{img_name}_ocr.md")
     with open(markdown_path, 'w', encoding='utf-8') as md_file:
         md_file.write("\n".join(markdown_content))
-    # print(f"Markdown saved to {markdown_path}")
+    print(f"Markdown saved to {markdown_path}")
 
 
 # 转换成docx格式
@@ -382,7 +421,7 @@ def convert_info_docx(img, res, save_folder, img_name):
     # save to docx
     docx_path = os.path.join(save_folder, "{}_ocr.docx".format(img_name))
     doc.save(docx_path)
-    # logger.info("docx save to {}".format(docx_path))
+    logger.info("docx save to {}".format(docx_path))
 
 
 def sorted_layout_boxes(res, w):
