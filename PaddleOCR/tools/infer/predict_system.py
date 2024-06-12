@@ -149,8 +149,8 @@ class TextSystem(object):
                 masked_img[ymin:ymax, xmin:xmax, :] = 255
         masked_img = Image.fromarray(masked_img)
 
-        save_path = "/data/llm/llm-pdf-parsing-main/mask_img.png"
-        masked_img.save(save_path)
+        # save_path = "/data/llm/llm-pdf-parsing-main/mask_img.png"
+        # masked_img.save(save_path)
         # from IPython.display import display
 
         # import matplotlib.pyplot as plt

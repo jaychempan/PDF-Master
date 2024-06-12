@@ -50,13 +50,15 @@ def worker(task_list, config_path, gpu_id, retry_counter, time_counter, progress
     retry_count = 0
 
     for dir_path in task_list:
-        command = f"CUDA_VISIBLE_DEVICES={gpu_id} python pos-process-single.py --input_directory {dir_path} --config_path {config_path}"
+        print(dir_path)
+        command = f"CUDA_VISIBLE_DEVICES={gpu_id} python pos-process-single.py --input_directory '{dir_path}' --config_path {config_path}"
         
         task_completed = False
         while not task_completed:  # 使用标志变量来控制重试
             try:
                 with open(os.devnull, 'w') as devnull:  # 重定向输出到/dev/null
-                    subprocess.run(command, check=True, shell=True, stdout=devnull, stderr=devnull)
+                    subprocess.run(command, check=True, shell=True)
+                    # subprocess.run(command, check=True, shell=True, stdout=devnull, stderr=devnull)
                 logging.info(f"Successfully processed directory: {dir_path}")
                 task_completed = True  # 任务成功，设置标志变量
             except subprocess.CalledProcessError as e:
@@ -90,7 +92,8 @@ def progress_monitor(total_tasks, progress_queue):
                 pass
 
 def main(input_directory, config_path, num_processes):
-    gpu_ids = "0,1,2,3,4,5,6,7"
+    # gpu_ids = "0,1,2,3,4,5,6,7"
+    gpu_ids = "2,3,4,5"
     gpu_list = gpu_ids.split(",")
     num_gpus = len(gpu_list)
     

@@ -23,7 +23,7 @@ args = {
     '--layout_dict_path': './PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
     '--vis_font_path': './ppocr_img/fonts/simfang.ttf',
     '--recovery': 'True',
-    '--output': './shangfei/commac_pdfs_0604/',
+    '--output': './shangfei/output_pdfs/',
     '--use_pdf2docx_api': 'False',
     '--mode': 'structure',
     '--return_word_box': 'False',
@@ -126,8 +126,8 @@ if __name__ == '__main__':
     num_splits = args_sys.num_processes
 
     start_time = time.time()
-    gpus = [0, 1, 2, 3, 4, 5, 6, 7]  # 可用的GPU ID列表
-    
+    # gpus = [0, 1, 2, 3, 4, 5, 6, 7]  # 可用的GPU ID列表
+    gpus = [0, 1, 2, 3]
     # Manager对象用于在进程之间共享数据
     manager = Manager()
     retry_counter = manager.dict()

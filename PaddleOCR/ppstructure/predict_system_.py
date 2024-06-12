@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from tqdm import tqdm
 import os
 import sys
 import subprocess
@@ -37,8 +37,6 @@ from ppstructure.layout.predict_layout import LayoutPredictor
 from ppstructure.table.predict_table import TableSystem, to_excel
 from ppstructure.utility import parse_args, draw_structure_result, cal_ocr_word_box
 
-
-
 logger = get_logger()
 
 class StructureSystem(object):
@@ -63,15 +61,16 @@ class StructureSystem(object):
                     "When args.layout is false, args.ocr is automatically set to false"
                 )
             # init model
-            self.layout_predictor = None
-            self.text_system = None
+            self.layout_predictor = None # 重点
+            self.text_system = None # 重点
             self.table_system = None
             if args.layout:
                 self.layout_predictor = LayoutPredictor(args)
                 if args.ocr:
                     self.text_system = TextSystem(args)
-            if args.table:
+            if args.table: #不用表格解析，加快速度，因为表格是直接保存图片的方式
                 if self.text_system is not None:
+                    
                     self.table_system = TableSystem(
                         args,
                         self.text_system.text_detector,
@@ -136,12 +135,11 @@ class StructureSystem(object):
             # and then filter out relevant texts according to the layout regions.
             text_res = None
             if self.text_system is not None:
-                text_res, ocr_time_dict, analyzer_outs = self._predict_text(img)
+                text_res, ocr_time_dict = self._predict_text(img)
                 time_dict["det"] += ocr_time_dict["det"]
                 time_dict["rec"] += ocr_time_dict["rec"]
 
             res_list = []
-
             for region in layout_res:
                 res = ""
                 if region["bbox"] is not None:
@@ -179,36 +177,10 @@ class StructureSystem(object):
                             "img_idx": img_idx, # 这个是跟页码相关的例如3表示第四页
                         }
                 )
-
-            # for mf_box_info in analyzer_outs:
-            #     res = "123"
-            #     if mf_box_info['type'] in ( 'embedding'):
-
-            #         if mf_box_info["box"] is not None:
-            #             x1 = np.min(mf_box_info["box"] [:, 0])
-            #             y1 = np.min(mf_box_info["box"] [:, 1])
-            #             x2 = np.max(mf_box_info["box"] [:, 0])
-            #             y2 = np.max(mf_box_info["box"] [:, 1])
-            #             x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-            #             roi_img = ori_im[y1:y2, x1:x2, :]
-            #         else:
-            #             x1, y1, x2, y2 = 0, 0, w, h
-            #             roi_img = ori_im
-            #         bbox = [x1, y1, x2, y2]
-            #         res_list.append(
-            #             {
-            #                 # "type": mf_box_info['type'].lower(), # 识别区域的类别
-            #                 "type": "equation",
-            #                 "bbox": bbox, # bbox框住的图片
-            #                 "img": roi_img, # 对应的文字识别的小块图片
-            #                 "res": res, # 这个是识别的文字
-            #                 "img_idx": img_idx, # 这个是跟页码相关的例如3表示第四页
-            #             }
-            #     )
                     
             end = time.time()
             time_dict["all"] = end - start
-            return res_list, time_dict, ori_im
+            return res_list, time_dict
 
         elif self.mode == "kie":
             re_res, elapse = self.kie_predictor(img)
@@ -219,7 +191,7 @@ class StructureSystem(object):
         return None, None
 
     def _predict_text(self, img):
-        filter_boxes, filter_rec_res, ocr_time_dict, analyzer_outs , filter_label= self.text_system(img)
+        filter_boxes, filter_rec_res, ocr_time_dict = self.text_system(img)
 
         # remove style char,
         # when using the recognition model trained on the PubtabNet dataset,
@@ -241,7 +213,7 @@ class StructureSystem(object):
             "</i>",
         ]
         res = []
-        for box, rec_res, label in zip(filter_boxes, filter_rec_res,filter_label):
+        for box, rec_res in zip(filter_boxes, filter_rec_res):
             rec_str, rec_conf = rec_res[0], rec_res[1]
             for token in style_token:
                 if token in rec_str:
@@ -250,44 +222,24 @@ class StructureSystem(object):
                 word_box_content_list, word_box_list = cal_ocr_word_box(
                     rec_str, box, rec_res[2]
                 )
-                if label == 'embedding':
-                    res.append(
-                        {
-                            "embedding": rec_str,
-                            "confidence": float(rec_conf),
-                            "text_region": box.tolist(),
-                            "text_word": word_box_content_list,
-                            "text_word_region": word_box_list,
-                        }
-                    )
-                else:
-                    res.append(
-                        {
-                            "text": rec_str,
-                            "confidence": float(rec_conf),
-                            "text_region": box.tolist(),
-                            "text_word": word_box_content_list,
-                            "text_word_region": word_box_list,
-                        }
+                res.append(
+                    {
+                        "text": rec_str,
+                        "confidence": float(rec_conf),
+                        "text_region": box.tolist(),
+                        "text_word": word_box_content_list,
+                        "text_word_region": word_box_list,
+                    }
                 )
             else: # 一般走这个，不需要具体到单词的word
-                    if label == 'embedding':
-                        res.append(
+                res.append(
                     {
-                        "embedding": rec_str,
+                        "text": rec_str,
                         "confidence": float(rec_conf),
                         "text_region": box.tolist(),
                     }
                 )
-                    else:
-                        res.append(
-                            {
-                                "text": rec_str,
-                                "confidence": float(rec_conf),
-                                "text_region": box.tolist(),
-                            }
-                        )
-        return res, ocr_time_dict, analyzer_outs
+        return res, ocr_time_dict
 
     def _filter_text_res(self, text_res, bbox):
         res = []
@@ -308,7 +260,7 @@ class StructureSystem(object):
         return True
 
 
-def save_structure_res(res, save_folder, img_name, img_idx=0,ori_im=0):
+def save_structure_res(res, save_folder, img_name, img_idx=0):
     excel_save_folder = os.path.join(save_folder, img_name)
     os.makedirs(excel_save_folder, exist_ok=True)
     # 增加子目录存放不同类别
@@ -354,34 +306,12 @@ def save_structure_res(res, save_folder, img_name, img_idx=0,ori_im=0):
                     # excel_save_folder, "figures/{}_{}.jpg".format(region["bbox"], img_idx)
                     excel_save_folder, "equations/{}_{}.jpg".format(img_idx, region["bbox"])
                 ), roi_img)
-            elif region["type"].lower() == "text":
-                for item in region['res']:
-                    # 检查是否存在'text_region'键
-                    if  'embedding' in item:
-                        # 假设text_region是一个包含四个数值的列表，代表裁剪区域的左上角和右下角坐标
-                        # [x1, y1, x2, y2]
-                        x_coords = [point[0] for point in item['text_region']]
-                        y_coords = [point[1] for point in item['text_region']]
-
-                        x1 = min(x_coords)  # 使用内置的 min 函数来找到最小 x 坐标
-                        y1 = min(y_coords)  # 使用内置的 min 函数来找到最小 y 坐标
-                        x2 = max(x_coords)  # 使用内置的 max 函数来找到最大 x 坐标
-                        y2 = max(y_coords)  # 使用内置的 max 函数来找到最大 y 坐标
-                        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-                        bbox = [x1, y1, x2, y2]
-                        roi_img = ori_im[y1:y2, x1:x2, :]
-                        cv2.imwrite(os.path.join(
-                            # excel_save_folder, "figures/{}_{}.jpg".format(region["bbox"], img_idx)
-                            excel_save_folder, "equations/{}_{}.jpg".format(img_idx, bbox)
-                ), roi_img)
 
 
 def main(args):
-
-    
     image_file_list = get_image_file_list(args.image_dir)
     image_file_list = image_file_list
-    # image_file_list = image_file_list[args.process_id :: args.total_process_num]
+    image_file_list = image_file_list[args.process_id :: args.total_process_num]
 
     if not args.use_pdf2docx_api:
         structure_sys = StructureSystem(args)
@@ -389,16 +319,20 @@ def main(args):
         os.makedirs(save_folder, exist_ok=True)
     img_num = len(image_file_list)
 
-    for i, image_file in enumerate(image_file_list):
-        logger.info("[{}/{}] {}".format(i, img_num, image_file))
+    # for i, image_file in enumerate(image_file_list):
+    #     # logger.info("[{}/{}] {}".format(i, img_num, image_file))
+    #     img, flag_gif, flag_pdf = check_and_read(image_file)
+    #     img_name = os.path.basename(image_file).split(".")[0]
+
+    # 使用 tqdm 进行进度可视化
+    for i, image_file in enumerate(tqdm(image_file_list, desc="Processing Images", position=0, leave=True)):
         img, flag_gif, flag_pdf = check_and_read(image_file)
         img_name = os.path.basename(image_file).split(".")[0]
 
         # 在处理pdf前进行判断，如果最终需要的json文件存在则跳过（表明已经处理过了）
         json_path = os.path.join(os.path.join(save_folder, img_name), f"{img_name}_ocr.json")
-
         if os.path.exists(json_path):
-            print("json文件存在,跳过处理")
+            # print(f"json文件存在,跳过处理: {json_path}")
             continue
 
         if args.recovery and args.use_pdf2docx_api and flag_pdf:
@@ -410,7 +344,7 @@ def main(args):
             cv = Converter(image_file)
             cv.convert(docx_file)
             cv.close()
-            logger.info("docx save to {}".format(docx_file))
+            # logger.info("docx save to {}".format(docx_file))
             continue
 
         if not flag_gif and not flag_pdf:
@@ -418,7 +352,7 @@ def main(args):
 
         if not flag_pdf:
             if img is None:
-                logger.error("error in loading image:{}".format(image_file))
+                # logger.error("error in loading image:{}".format(image_file))
                 continue
             imgs = [img]
         else:
@@ -426,9 +360,7 @@ def main(args):
 
         all_res = []
         for index, img in enumerate(imgs):
-            res, time_dict ,ori_im= structure_sys(img, img_idx=index)
-
-
+            res, time_dict = structure_sys(img, img_idx=index)
             # print(res) # 这里的res表示的每个bbox对应的图片信息，例如bbox信息，文本内容，置信度等
             # os.makedirs(os.path.join(save_folder, img_name) + '/shows/', exist_ok=True)
             # img_save_path = os.path.join(
@@ -466,11 +398,7 @@ def main(args):
                     convert_info_to_json,
                     
                 )
-            # 如果公式在text layout里面 就嵌入
 
-
-
-        # dt_boxes = sorted_boxes(dt_boxes)
                 h, w, _ = img.shape
                 res = sorted_layout_boxes(res, w) # 这里完成对文章顺序的重新排列，尤其是对双栏的文档，为了保证排序的准确性这里还是不能进行合并
                 all_res.append(res) # 这里all_res里面包含多个子列表
@@ -479,23 +407,22 @@ def main(args):
         # 保存图像文件
         for res in all_res:
             page_idx = page_idx + 1
-            save_structure_res(res, save_folder, img_name, page_idx,ori_im)
+            save_structure_res(res, save_folder, img_name, page_idx)
 
         if args.recovery and all_res != []:
-            # try:
+            try:
                 # Example usage:
-            convert_info_to_json(img, all_res, save_folder, img_name)
+                convert_info_to_json(img, all_res, save_folder, img_name)
                 # convert_info_markdown(img, all_res, save_folder, img_name)
                 # convert_info_docx(img, all_res, save_folder, img_name)
-            # except Exception as ex:
-            #     logger.error(
-            #         "error in layout recovery image:{}, err msg: {}".format(
-            #             image_file, ex
-            #         )
-            #     )
-            #     continue
-        logger.info("Predict time : {:.3f}s".format(time_dict["all"]))
-
+            except Exception as ex:
+                # logger.error(
+                #     "error in layout recovery image:{}, err msg: {}".format(
+                #         image_file, ex
+                #     )
+                # )
+                continue
+        # logger.info("Predict time : {:.3f}s".format(time_dict["all"]))
 
 
 if __name__ == "__main__":
