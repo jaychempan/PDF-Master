@@ -21,6 +21,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(__dir__, "../..")))
 
 os.environ["FLAGS_allocator_strategy"] = "auto_growth"
 
+from cnstd import LayoutAnalyzer
+from typing import Dict, Any, Optional, Union, List, Sequence
+
 import cv2
 import copy
 import numpy as np
@@ -47,7 +50,10 @@ class TextSystem(object):
     def __init__(self, args):
         if not args.show_log:
             logger.setLevel(logging.INFO)
+            
+        self.mfd_detector = LayoutAnalyzer('mfd')
 
+        self.text_detector = predict_det.TextDetector(args)
         self.text_detector = predict_det.TextDetector(args)
         self.text_recognizer = predict_rec.TextRecognizer(args)
         self.use_angle_cls = args.use_angle_cls
@@ -80,8 +86,49 @@ class TextSystem(object):
 
         start = time.time()
         ori_im = img.copy()
+
+
+        analyzer_outs = []
+        crop_patches = []
+        mf_results = []
+
+        from PIL import Image
+        pil_image = Image.fromarray(img)
+        w, h = pil_image.size
+
+        resized_shape = (h,w)  # (H, W)
+
+        analyzer_outs = self.mfd_detector(pil_image.copy(), resized_shape=resized_shape)
+        img_mfd = pil_image.copy()
+        # 遍历检测结果
+
+        masked_img = np.array(pil_image.copy())
         
-        dt_boxes, elapse = self.text_detector(img) # 重点
+        # 把公式部分mask掉，然后对其他部分进行OCR
+        for mf_box_info in analyzer_outs:
+            if mf_box_info['type'] in ( 'embedding'):
+                box = mf_box_info['box']
+                xmin, ymin = max(0, int(box[0][0]) - 1), max(0, int(box[0][1]) - 1)
+                xmax, ymax = (
+                    min(pil_image.size[0], int(box[2][0]) + 1),
+                    min(pil_image.size[1], int(box[2][1]) + 1),
+                )
+                masked_img[ymin:ymax, xmin:xmax, :] = 255
+        masked_img = Image.fromarray(masked_img)
+
+        # save_path = "/data/llm/llm-pdf-parsing-main/mask_img.png"
+        # masked_img.save(save_path)
+        # from IPython.display import display
+
+        # import matplotlib.pyplot as plt
+        # plt.figure(figsize=(10,10))
+        # plt.imshow(masked_img)
+        # plt.axis('off')
+        # plt.show()
+
+        img = np.array(masked_img.copy())
+
+        dt_boxes, elapse = self.text_detector(img)
         time_dict["det"] = elapse
 
         if dt_boxes is None:
@@ -93,10 +140,21 @@ class TextSystem(object):
             logger.debug(
                 "dt_boxes num : {}, elapsed : {}".format(len(dt_boxes), elapse)
             )
+
+
+        dt_boxes_tmp = dt_boxes
+        dt_labels = ['text'] * len(dt_boxes)  # 假设初始dt_boxes每个都有'embedding'标签
+        for item in analyzer_outs:
+            if item['type'] == 'embedding':
+                # 将'box'值转换为numpy数组（如果它还不是）
+                box_array =         np.float32(np.array(item['box']))
+                # 将box添加到dt_boxes数组中
+                dt_boxes = np.append(dt_boxes, [box_array], axis=0)
+                dt_labels.append('embedding')
+        dt_boxes_1,dt_labels = sorted_boxes_text(dt_boxes, dt_labels)
+
+        dt_boxes = dt_boxes_1
         img_crop_list = []
-
-        dt_boxes = sorted_boxes(dt_boxes)
-
         for bno in range(len(dt_boxes)):
             tmp_box = copy.deepcopy(dt_boxes[bno])
             if self.args.det_box_type == "quad":
@@ -116,15 +174,21 @@ class TextSystem(object):
         logger.debug("rec_res num  : {}, elapsed : {}".format(len(rec_res), elapse))
         if self.args.save_crop_res:
             self.draw_crop_rec_res(self.args.crop_res_save_dir, img_crop_list, rec_res)
-        filter_boxes, filter_rec_res = [], []
-        for box, rec_result in zip(dt_boxes, rec_res):
+        filter_boxes, filter_rec_res , filter_label= [], [], []
+
+        for box, rec_result,label in zip(dt_boxes, rec_res,dt_labels):
             text, score = rec_result[0], rec_result[1]
-            if score >= self.drop_score:
+            if score >= self.drop_score or label == 'embedding':
                 filter_boxes.append(box)
                 filter_rec_res.append(rec_result)
+                filter_label.append(label)
+
+                
         end = time.time()
         time_dict["all"] = end - start
-        return filter_boxes, filter_rec_res, time_dict
+        return filter_boxes, filter_rec_res, time_dict, analyzer_outs, filter_label, img_mfd
+
+
 
 
 def sorted_boxes(dt_boxes):
@@ -151,6 +215,42 @@ def sorted_boxes(dt_boxes):
                 break
     return _boxes
 
+
+def sorted_boxes_text(dt_boxes, dt_labels):
+    """
+    Sort text boxes in order from top to bottom, left to right, with a post-sort
+    adjustment for boxes that are very close vertically and ordered horizontally.
+    Args:
+        dt_boxes (array): Detected text boxes with shape [4, 2].
+        dt_labels (list): Labels corresponding to the text boxes.
+    Returns:
+        sort_box (array): Sorted boxes with shape [4, 2].
+        sorted_labels (list): Sorted labels corresponding to the sorted boxes.
+    """
+    num_boxes = dt_boxes.shape[0]
+    
+    # Combine boxes and labels into a list of tuples
+    combined = list(zip(dt_boxes, dt_labels))
+    
+    # Sort primarily by the y-coordinate and secondarily by the x-coordinate
+    combined.sort(key=lambda x: (x[0][0][1], x[0][0][0]))
+    
+    # Further sort boxes that are close in y-coordinate
+    for i in range(num_boxes - 1):
+        for j in range(i, -1, -1):
+            if abs(combined[j + 1][0][0][1] - combined[j][0][0][1]) < 10 and (
+                combined[j + 1][0][0][0] < combined[j][0][0][0]
+            ):
+                # Swap boxes and corresponding labels
+                combined[j], combined[j + 1] = combined[j + 1], combined[j]
+            else:
+                break
+    
+    # Extract the sorted boxes and labels
+    sort_box = np.array([item[0] for item in combined])
+    sorted_labels = [item[1] for item in combined]
+    
+    return sort_box, sorted_labels
 
 def main(args):
     image_file_list = get_image_file_list(args.image_dir)
