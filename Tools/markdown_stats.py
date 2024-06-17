@@ -49,7 +49,7 @@ def write_no_markdown_subdirs(no_markdown_subdirs, output_file):
             f.write(subdir + '\n')
 
 def main():
-    directory = '/mnt/petrelfs/panjiancheng/llm-pdf-parsing/shangfei/commac_pdfs_0604/structure/'  # 请替换为你的目录路径
+    directory = '/mnt/petrelfs/panjiancheng/llm-pdf-parsing/shangfei/20240605_comac_pdfs_process/structure'  # 请替换为你的目录路径
     output_file = 'no_markdown_subdirs.txt'
     
     no_markdown_subdirs, json_count, markdown_count, markdown_total_size = check_markdown_files(directory)
