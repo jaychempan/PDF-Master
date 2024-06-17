@@ -23,7 +23,7 @@ args = {
     '--layout_dict_path': './PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
     '--vis_font_path': './ppocr_img/fonts/simfang.ttf',
     '--recovery': 'True',
-    '--output': './shangfei/output_pdfs/',
+    '--output': './shangfei/default_output/',
     '--use_pdf2docx_api': 'False',
     '--mode': 'structure',
     '--return_word_box': 'False',
@@ -69,9 +69,10 @@ def create_and_move_files(pdf_dir, splits):
     return split_dirs
 
 # 更新参数字典中的image_dir参数
-def update_args_with_split(args, split_dir):
+def update_args_with_split(args, split_dir, output_directory):
     args_copy = copy.deepcopy(args)
     args_copy['--image_dir'] = split_dir
+    args_copy['--output'] = output_directory
     return args_copy
 
 # 执行预测系统
@@ -92,8 +93,10 @@ def run_predict_system(args_dict, gpu_id, retry_counter, time_counter):
 
     while True:
         try:
-            subprocess.run(command, check=True, env=env)
-            break  # 成功运行则退出循环
+            with open(os.devnull, 'w') as devnull:  # 重定向输出到/dev/null
+                # subprocess.run(command, check=True, env=env, stdout=devnull, stderr=devnull)
+                subprocess.run(command, check=True, env=env)
+                break  # 成功运行则退出循环
         except subprocess.CalledProcessError as e:
             retry_count += 1
             # logging.warning(f"Retrying... (Attempt {retry_count}) for process {current_process().name} on GPU {gpu_id}")
@@ -109,8 +112,8 @@ def run_predict_system(args_dict, gpu_id, retry_counter, time_counter):
     retry_counter[current_process().name] = retry_count
 
 def process_split_dir(params):
-    split_dir, gpu_id, retry_counter, time_counter = params
-    updated_args = update_args_with_split(args, split_dir)
+    split_dir, gpu_id, retry_counter, time_counter, output_directory = params
+    updated_args = update_args_with_split(args, split_dir, output_directory)
     run_predict_system(updated_args, gpu_id, retry_counter, time_counter)
 
 if __name__ == '__main__':
@@ -119,15 +122,17 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description="多进程处理目录下的子目录中的JSON文件")
     parser.add_argument("--input_directory", type=str, required=True, help="指定目录下的所有子目录包含了json文件")
+    parser.add_argument("--output_directory", type=str, required=True, help="结构解析输出文件目录")
     parser.add_argument("--num_processes", type=int, required=True, help="每张GPU卡分配的进程数")
     args_sys = parser.parse_args()
 
     base_dir = args_sys.input_directory
     num_splits = args_sys.num_processes
-
+    output_directory = args_sys.output_directory
     start_time = time.time()
-    # gpus = [0, 1, 2, 3, 4, 5, 6, 7]  # 可用的GPU ID列表
-    gpus = [0, 1, 2, 3]
+    gpus = [0, 1, 2, 3, 4, 5, 6, 7]  # 可用的GPU ID列表
+    # gpus = [2, 3, 4, 5]
+
     # Manager对象用于在进程之间共享数据
     manager = Manager()
     retry_counter = manager.dict()
@@ -143,7 +148,7 @@ if __name__ == '__main__':
     split_dirs = create_and_move_files(base_dir, splits)
     
     # 为每个分片指定GPU ID，确保每个GPU运行N个进程
-    split_gpu_pairs = [(split_dirs[i], gpus[i % len(gpus)], retry_counter, time_counter) for i in range(len(split_dirs))]
+    split_gpu_pairs = [(split_dirs[i], gpus[i % len(gpus)], retry_counter, time_counter, output_directory) for i in range(len(split_dirs))]
 
     with Pool(len(split_gpu_pairs)) as pool:
         pool.map(process_split_dir, split_gpu_pairs)

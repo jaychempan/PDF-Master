@@ -3,12 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-shangfei/*
-models/*
-UniMERNet/*
-test_pdfs/*
-Pix2Text/*
-logs/*
+models/
+logs/
+data/
 
 # C extensions
 *.so

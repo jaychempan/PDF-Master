@@ -88,6 +88,7 @@ class StructureSystem(object):
         self.return_word_box = args.return_word_box
 
     def __call__(self, img, return_ocr_result_in_table=False, img_idx=0):
+
         time_dict = {
             "image_orientation": 0,
             "layout": 0,
@@ -136,7 +137,7 @@ class StructureSystem(object):
             # and then filter out relevant texts according to the layout regions.
             text_res = None
             if self.text_system is not None:
-                text_res, ocr_time_dict, analyzer_outs = self._predict_text(img)
+                text_res, ocr_time_dict, analyzer_outs ,text_mfd_im= self._predict_text(img)
                 time_dict["det"] += ocr_time_dict["det"]
                 time_dict["rec"] += ocr_time_dict["rec"]
 
@@ -208,7 +209,7 @@ class StructureSystem(object):
                     
             end = time.time()
             time_dict["all"] = end - start
-            return res_list, time_dict, ori_im
+            return res_list, time_dict, text_mfd_im,analyzer_outs
 
         elif self.mode == "kie":
             re_res, elapse = self.kie_predictor(img)
@@ -219,7 +220,7 @@ class StructureSystem(object):
         return None, None
 
     def _predict_text(self, img):
-        filter_boxes, filter_rec_res, ocr_time_dict, analyzer_outs , filter_label= self.text_system(img)
+        filter_boxes, filter_rec_res, ocr_time_dict, analyzer_outs , filter_label, img_mfd= self.text_system(img)
 
         # remove style char,
         # when using the recognition model trained on the PubtabNet dataset,
@@ -287,7 +288,7 @@ class StructureSystem(object):
                                 "text_region": box.tolist(),
                             }
                         )
-        return res, ocr_time_dict, analyzer_outs
+        return res, ocr_time_dict, analyzer_outs,img_mfd
 
     def _filter_text_res(self, text_res, bbox):
         res = []
@@ -308,7 +309,7 @@ class StructureSystem(object):
         return True
 
 
-def save_structure_res(res, save_folder, img_name, img_idx=0,ori_im=0):
+def save_structure_res(res, save_folder, img_name, img_idx=0,all_mfd_images=0,analyzer_outs=0):
     excel_save_folder = os.path.join(save_folder, img_name)
     os.makedirs(excel_save_folder, exist_ok=True)
     # 增加子目录存放不同类别
@@ -316,6 +317,8 @@ def save_structure_res(res, save_folder, img_name, img_idx=0,ori_im=0):
     os.makedirs(excel_save_folder + '/figures/', exist_ok=True)
     os.makedirs(excel_save_folder + '/equations/', exist_ok=True)
     os.makedirs(excel_save_folder + '/res/', exist_ok=True)
+    # os.makedirs(excel_save_folder + '/embedding/', exist_ok=True)
+
     res_cp = deepcopy(res)
     # save res
     with open(
@@ -360,20 +363,37 @@ def save_structure_res(res, save_folder, img_name, img_idx=0,ori_im=0):
                     if  'embedding' in item:
                         # 假设text_region是一个包含四个数值的列表，代表裁剪区域的左上角和右下角坐标
                         # [x1, y1, x2, y2]
-                        x_coords = [point[0] for point in item['text_region']]
-                        y_coords = [point[1] for point in item['text_region']]
-
-                        x1 = min(x_coords)  # 使用内置的 min 函数来找到最小 x 坐标
-                        y1 = min(y_coords)  # 使用内置的 min 函数来找到最小 y 坐标
-                        x2 = max(x_coords)  # 使用内置的 max 函数来找到最大 x 坐标
-                        y2 = max(y_coords)  # 使用内置的 max 函数来找到最大 y 坐标
-                        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-                        bbox = [x1, y1, x2, y2]
-                        roi_img = ori_im[y1:y2, x1:x2, :]
-                        cv2.imwrite(os.path.join(
+                        
+                        box = item['text_region']
+                        x1, y1, x2, y2 = box[0][0], box[0][1], box[1][0], box[2][1] 
+                        x1_b, y1_b, x2_b, y2_b = int(x1), int(y1), int(x2), int(y2)
+                        bbox = [x1_b, y1_b, x2_b, y2_b]
+                        cropped_img = all_mfd_images[img_idx].crop((x1, y1, x2, y2))
+                        # 保存截取的图像到文件
+                        output_path = os.path.join(
                             # excel_save_folder, "figures/{}_{}.jpg".format(region["bbox"], img_idx)
-                            excel_save_folder, "equations/{}_{}.jpg".format(img_idx, bbox)
-                ), roi_img)
+                            excel_save_folder, "equations/{}_{}.jpg".format(img_idx, bbox))
+                        cropped_img.save(output_path)
+
+                        # img_array = text_mfd_im.copy()
+                        # output_folder = 'mfd_test_img'
+                        # for index, item in enumerate(analyzer_outs):
+                        #     type_ = item['type']
+                        #     box = item['box']
+                        #     score = item['score']
+                        #     # 提取边界框坐标
+                        #     x1, y1, x2, y2 = box[0][0], box[0][1], box[1][0], box[2][1]
+                        #     # 从原始图像中截取目标区域
+                        #     cropped_img = img_array.crop((x1, y1, x2, y2))
+                        #     # 保存截取的图像到文件
+                        #     output_path = os.path.join(output_folder, f'word_{index}.jpg')
+                        #     cropped_img.save(output_path)
+                        #     print(f'Saved {output_path}')
+                        # print(f'Save OK')
+                        
+
+
+
 
 
 def main(args):
@@ -425,10 +445,13 @@ def main(args):
             imgs = img
 
         all_res = []
+
+        all_mfd_images = []
+
         for index, img in enumerate(imgs):
-            res, time_dict ,ori_im= structure_sys(img, img_idx=index)
-
-
+            res, time_dict ,text_mfd_im,analyzer_outs= structure_sys(img, img_idx=index)
+            all_mfd_images.append(text_mfd_im)
+            
             # print(res) # 这里的res表示的每个bbox对应的图片信息，例如bbox信息，文本内容，置信度等
             # os.makedirs(os.path.join(save_folder, img_name) + '/shows/', exist_ok=True)
             # img_save_path = os.path.join(
@@ -479,7 +502,7 @@ def main(args):
         # 保存图像文件
         for res in all_res:
             page_idx = page_idx + 1
-            save_structure_res(res, save_folder, img_name, page_idx,ori_im)
+            save_structure_res(res, save_folder, img_name, page_idx,all_mfd_images,analyzer_outs)
 
         if args.recovery and all_res != []:
             # try:
@@ -496,6 +519,15 @@ def main(args):
             #     continue
         logger.info("Predict time : {:.3f}s".format(time_dict["all"]))
 
+
+# if __name__ == "__main__":
+
+
+
+        # args = parse_args()
+
+
+        # main(args)
 
 
 if __name__ == "__main__":
@@ -515,3 +547,5 @@ if __name__ == "__main__":
             p.wait()
     else:
         main(args)
+
+

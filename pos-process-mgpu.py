@@ -92,8 +92,8 @@ def progress_monitor(total_tasks, progress_queue):
                 pass
 
 def main(input_directory, config_path, num_processes):
-    # gpu_ids = "0,1,2,3,4,5,6,7"
-    gpu_ids = "2,3,4,5"
+    gpu_ids = "0,1,2,3,4,5,6,7"
+    # gpu_ids = "2,3,4,5"
     gpu_list = gpu_ids.split(",")
     num_gpus = len(gpu_list)
     

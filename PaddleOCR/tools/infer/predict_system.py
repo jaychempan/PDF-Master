@@ -50,8 +50,7 @@ class TextSystem(object):
     def __init__(self, args):
         if not args.show_log:
             logger.setLevel(logging.INFO)
-    
-
+            
         self.mfd_detector = LayoutAnalyzer('mfd')
 
         self.text_detector = predict_det.TextDetector(args)
@@ -100,40 +99,8 @@ class TextSystem(object):
         resized_shape = (h,w)  # (H, W)
 
         analyzer_outs = self.mfd_detector(pil_image.copy(), resized_shape=resized_shape)
-
-        # To Latex
-
-        # for mf_box_info in analyzer_outs:
-        #     box = mf_box_info['box']
-        #     xmin, ymin, xmax, ymax = (
-        #         int(box[0][0]),
-        #         int(box[0][1]),
-        #         int(box[2][0]),
-        #         int(box[2][1]),
-        #     )
-        #     crop_patch = pil_image.crop((xmin, ymin, xmax, ymax))
-        #     crop_patches.append(crop_patch)
-
-        # mfr_batch_size = kwargs.get('mfr_batch_size', 1)
-        # formula_rec_kwargs = kwargs.get('formula_rec_kwargs', {})
-        # mf_results = self.latex_ocr.recognize(
-        #     crop_patches, batch_size=mfr_batch_size, **formula_rec_kwargs
-        # )
-
-        # assert len(mf_results) == len(analyzer_outs)
-
-        # mf_outs = []
-        # for mf_box_info, patch_out in zip(analyzer_outs, mf_results):
-        #     text = patch_out['text']
-        #     mf_outs.append(
-        #         {
-        #             'type': mf_box_info['type'],
-        #             'text': text,
-        #             'position': mf_box_info['box'],
-        #             'score': patch_out['score'],
-        #         }
-        #     )
-
+        img_mfd = pil_image.copy()
+        # 遍历检测结果
 
         masked_img = np.array(pil_image.copy())
         
@@ -219,7 +186,7 @@ class TextSystem(object):
                 
         end = time.time()
         time_dict["all"] = end - start
-        return filter_boxes, filter_rec_res, time_dict, analyzer_outs, filter_label
+        return filter_boxes, filter_rec_res, time_dict, analyzer_outs, filter_label, img_mfd
 
 
 

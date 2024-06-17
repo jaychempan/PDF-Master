@@ -104,7 +104,7 @@ def convert_info_to_json(img, res, save_folder, img_name):
                 # 如果下一个region不是image caption的话，就直接添加image_block,认为是没识别或者没有image_caption
                 if region_idx+1 < len(page) and page[region_idx+1]["type"].lower() == 'figure_caption':
                     image_block["blocks"].append({
-                            "bbox": cal_bbox(span["text_region"]),
+                            "bbox": region["bbox"],
                             "type": "image_caption", # 是文字的话就是text，但是如果是inline_equation的话就需要进行格式化转换（待做）
                             "lines": []
                         })

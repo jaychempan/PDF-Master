@@ -61,42 +61,42 @@ def process_one_block(page_info, markdown_content, page_idx, block_idx):
                         one_text += content + ' '
         # print(one_text)
         markdown_content.append(f"{one_text}")
-    elif block_type == "image":
-        one_image_body = ""
-        one_image_caption = ""
-        for block in block["blocks"]: # 里面可能有image_body和image_block
-            if block['type'] == "image_body":
-                for line in block["lines"]:
-                    for span in line["spans"]:
-                        if span["type"] == "image":
-                            image_path = span['image_path']
-                            one_image_body += f"![Figure {page_idx}]({image_path})\n\n"
-            elif block['type'] == "image_caption":
-                for line in block["lines"]:
-                    for span in line["spans"]:
-                        if span["type"] == "text": # 后面可以扩展行内公式（表格同理）
-                            content = span['content']
-                            one_image_body += content
-        markdown_content.append(f"{one_image_body}")
-        markdown_content.append(f"{one_image_caption}")
-    elif block_type == "table":
-        one_image_body = ""
-        one_image_caption = ""
-        for block in block["blocks"]: # 里面可能有image_body和image_block
-            if block['type'] == "table_body":
-                for line in block["lines"]:
-                    for span in line["spans"]:
-                        if span["type"] == "image":
-                            image_path = span['image_path']
-                            one_image_body += f"![Table {page_idx}]({image_path})\n\n"
-            elif block['type'] == "table_caption":
-                for line in block["lines"]:
-                    for span in line["spans"]:
-                        content = span['content']
-                        if span["type"] == "text": # 后面可以扩展行内公式（表格同理）
-                            one_image_body += content
-        markdown_content.append(f"{one_image_body}")
-        markdown_content.append(f"{one_image_caption}")
+    # elif block_type == "image":
+    #     one_image_body = ""
+    #     one_image_caption = ""
+    #     for block in block["blocks"]: # 里面可能有image_body和image_block
+    #         if block['type'] == "image_body":
+    #             for line in block["lines"]:
+    #                 for span in line["spans"]:
+    #                     if span["type"] == "image":
+    #                         image_path = span['image_path']
+    #                         one_image_body += f"![Figure {page_idx}]({image_path})\n\n"
+    #         elif block['type'] == "image_caption":
+    #             for line in block["lines"]:
+    #                 for span in line["spans"]:
+    #                     if span["type"] == "text": # 后面可以扩展行内公式（表格同理）
+    #                         content = span['content']
+    #                         one_image_body += content
+    #     markdown_content.append(f"{one_image_body}")
+    #     markdown_content.append(f"{one_image_caption}")
+    # elif block_type == "table":
+    #     one_image_body = ""
+    #     one_image_caption = ""
+    #     for block in block["blocks"]: # 里面可能有image_body和image_block
+    #         if block['type'] == "table_body":
+    #             for line in block["lines"]:
+    #                 for span in line["spans"]:
+    #                     if span["type"] == "image":
+    #                         image_path = span['image_path']
+    #                         one_image_body += f"![Table {page_idx}]({image_path})\n\n"
+    #         elif block['type'] == "table_caption":
+    #             for line in block["lines"]:
+    #                 for span in line["spans"]:
+    #                     content = span['content']
+    #                     if span["type"] == "text": # 后面可以扩展行内公式（表格同理）
+    #                         one_image_body += content
+    #     markdown_content.append(f"{one_image_body}")
+    #     markdown_content.append(f"{one_image_caption}")
     elif block_type == "interline_equation":
         one_image_body = ""
         for line in block["lines"]:
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     )
     )
     parser.add_argument(
-    "--directory_path",
+    "--input_directory",
     type=str,
     required=True,
     help="指定目录下的所有子目录包含了json文件",
@@ -169,6 +169,6 @@ if __name__ == "__main__":
 
     start_time = time.time()
     # print(args.directory_path)
-    process_directory(args.directory_path)
+    process_directory(args.input_directory)
 
     print(time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time)))
