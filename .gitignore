@@ -7,10 +7,6 @@ __pycache__/
 weights/
 logs/
 data/
-=======
-models/
-logs/
-data/
 
 >>>>>>> bbb4b4eb4b2fce3047fb66fedb60ad22db81a812
 # C extensions
