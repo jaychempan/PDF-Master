@@ -51,7 +51,7 @@ class TextSystem(object):
         if not args.show_log:
             logger.setLevel(logging.INFO)
             
-        self.mfd_detector = LayoutAnalyzer('mfd')
+        self.mfd_detector = LayoutAnalyzer(model_name='mfd', device='cpu')
 
         self.text_detector = predict_det.TextDetector(args)
         self.text_detector = predict_det.TextDetector(args)

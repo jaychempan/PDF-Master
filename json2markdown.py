@@ -17,7 +17,7 @@ def process_one_pdf(pdf_info):
     return markdown_content
 
 def process_one_page(page_info, markdown_content):
-    print(f"Processing page index: {page_info['page_idx']}")
+    # print(f"Processing page index: {page_info['page_idx']}")
     
     # 按照顺序处理每一个block
     for block_idx in range(len(page_info["preproc_blocks"])):
@@ -31,7 +31,7 @@ def process_one_block(page_info, markdown_content, page_idx, block_idx):
     block = page_info['preproc_blocks'][block_idx]
     math_block = page_info['interline_equations']
     block_type = block["type"]
-    print(f"Processing {block_type}:")
+    # print(f"Processing {block_type}:")
 
     if block_type == "title":
         one_title = ""
@@ -102,18 +102,22 @@ def process_one_block(page_info, markdown_content, page_idx, block_idx):
         for line in block["lines"]:
             for span in line["spans"]:
                 if span["type"] == "interline_equation":
-                    print(span)
+                    # print(span)
                     math_idx = span['math_idx']
-                    print(f"math_idx: {math_idx}")
+                    # print(f"math_idx: {math_idx}")
                     content = math_block[math_idx]['lines'][-1]['spans'][-1]['content']
+                    content = content.replace(' ', '') # 去除公式中的空格
                     one_image_body += f"\n\n$${content}$$\n\n"
                     # image_path = span['image_path']
                     # one_image_body += f"\n\n![interline_equation {page_idx}]({image_path})\n\n"
                 elif span["type"] == "embedding":
-                    print(span)
+                    # print(span)
                     math_idx = span['math_idx']
-                    print(f"math_idx: {math_idx}")
+                    # print(f"math_idx: {math_idx}")
                     content = math_block[math_idx]['lines'][-1]['spans'][-1]['content']
+                    if len(content)==0:
+                        content = ''
+                    content = content.replace(' ', '') # 去除公式中的空格
                     one_image_body += f" ${content}$ "
         markdown_content.append(f"{one_image_body}")
 
@@ -130,12 +134,12 @@ def process_directory(directory_path):
     for root, dirs, files in os.walk(directory_path):
         for dir_ in dirs:
             dir_path = os.path.join(root, dir_)
-            print(f"dir_path:{dir_path}")
+            # print(f"dir_path:{dir_path}")
             for _, _, files in os.walk(dir_path):
-                print(files)
+                # print(files)
                 for file in files:
                     if file.endswith(".json"):
-                        print(f"processing {file}...")
+                        # print(f"processing {file}...")
                         json_file_path = os.path.join(dir_path, file)
                         pdf_info = load_json_file(json_file_path)
                         markdown_content = process_one_pdf(pdf_info)
