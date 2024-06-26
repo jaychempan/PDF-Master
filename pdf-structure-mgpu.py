@@ -30,7 +30,7 @@ args = {
     '--use_gpu': 'True',
     '--show_log': 'False',
     '--use_mp': 'True',
-    '--table': 'False'
+    '--table': 'True'
 }
 
 # 获取所有PDF文件及其大小

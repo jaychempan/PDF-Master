@@ -53,8 +53,8 @@ def process_files(src_dir, dst_dir):
     return file_stats
 
 # 使用示例
-src_directory = '/mnt/petrelfs/shengkejun/project_data/COMAC_pretrain_data/语料库_excel/'
-dst_directory = '/mnt/petrelfs/shengkejun/project_data/COMAC_pretrain_data/comac_pdfs/20240605_rename_comac_pdfs/'
+src_directory = '/mnt/petrelfs/panjiancheng/Miner-PDF-Benchmark/'
+dst_directory = '/mnt/petrelfs/panjiancheng/llm-pdf-parsing/data/input/bench/'
 stats = process_files(src_directory, dst_directory)
 
 print(f"PDF文件数: {stats['pdf']['count']}, 大小: {stats['pdf']['size']:.2f} GB")

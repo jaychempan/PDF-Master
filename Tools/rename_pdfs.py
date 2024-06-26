@@ -35,4 +35,4 @@ def rename_pdfs_in_dir(directory, csv_filename):
 
 # 使用示例：
 # 目标目录路径
-rename_pdfs_in_dir('/mnt/petrelfs/shengkejun/project_data/COMAC_pretrain_data/comac_pdfs/20240605_rename_comac_pdfs', '20240605_rename_comac_pdfs.csv')
+rename_pdfs_in_dir('/mnt/petrelfs/shengkejun/project_data/COMAC_pretrain_data/comac_pdfs/20240624_rename_comac_pdfs', '20240624_rename_comac_pdfs.csv')

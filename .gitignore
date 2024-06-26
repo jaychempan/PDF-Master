@@ -7,7 +7,7 @@ __pycache__/
 weights/
 logs/
 data/
-
+bench/
 >>>>>>> bbb4b4eb4b2fce3047fb66fedb60ad22db81a812
 # C extensions
 *.so

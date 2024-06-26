@@ -4,7 +4,7 @@ import shutil
 def extract_markdown_files(src_dir):
     # 定义目标目录路径
     parent_dir = os.path.dirname(src_dir)
-    target_dir = os.path.join(parent_dir, "markdown")
+    target_dir = os.path.join(parent_dir, "markdown_cnocr")
     
     # 如果目标目录不存在，则创建
     if not os.path.exists(target_dir):

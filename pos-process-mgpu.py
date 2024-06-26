@@ -52,6 +52,7 @@ def worker(task_list, config_path, gpu_id, retry_counter, time_counter, progress
     for dir_path in task_list:
         print(dir_path)
         command = f"CUDA_VISIBLE_DEVICES={gpu_id} python pos-process-single.py --input_directory '{dir_path}' --config_path {config_path}"
+        # command = f"CUDA_VISIBLE_DEVICES={gpu_id} python pos-process-single-cnocr.py --input_directory '{dir_path}' --config_path {config_path}"
         
         task_completed = False
         while not task_completed:  # 使用标志变量来控制重试

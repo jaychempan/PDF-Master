@@ -6,12 +6,20 @@ from PIL import Image
 from unimernet.common.config import Config
 import unimernet.tasks as tasks
 from unimernet.processors import load_processor
+from transformers import TrOCRProcessor
+from optimum.onnxruntime import ORTModelForVision2Seq
+
 
 class ImageProcessor:
     def __init__(self, cfg_path):
         self.cfg_path = cfg_path
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model, self.vis_processor = self.load_model_and_processor()
+        self.device = torch.device("cuda")
+        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # self.model, self.vis_processor = self.load_model_and_processor()
+
+        self.cnocr_processor = TrOCRProcessor.from_pretrained('./weights/pix2text-mfr')
+        self.cnocr_model = ORTModelForVision2Seq.from_pretrained('./weights/pix2text-mfr', use_cache=False)
+
 
     def load_model_and_processor(self):
         args = argparse.Namespace(cfg_path=self.cfg_path, options=None)
@@ -28,12 +36,21 @@ class ImageProcessor:
             print(f"Error: Unable to open image at {image_path}")
             return ""
         
-        image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
-        output = self.model.generate({"image": image})
-        pred = output["pred_str"][0]
-        # print("*************")
+        # image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
+        # output = self.model.generate({"image": image})
+        # pred = output["pred_str"][0]
+        # # print("*************")
         # print(pred)
-        return pred
+
+        pixel_values =  self.cnocr_processor(images=raw_image, return_tensors="pt").pixel_values
+        generated_ids =   self.cnocr_model .generate(pixel_values)
+        generated_text =  self.cnocr_processor.batch_decode(generated_ids, skip_special_tokens=True)
+        # print(f'generated_ids: {generated_ids}, \ngenerated text: {generated_text}')
+        pred_ocr = generated_text[0]
+
+        # pred_str = output["pred_str"]
+
+        return pred_ocr
 
 def process_span(span, processor, base_path):
     image_path = span.get("image_path", "")
@@ -90,7 +107,7 @@ def process_pdf_info(dir_path, file_path, processor):
 def process_directory(input_directory, processor):
     for root, _, files in os.walk(input_directory):
         for file in files:
-            if file.endswith('ocr.json'):
+            if file.endswith('_ocr.json'):
                 file_path = os.path.join(root, file)
                 print(f"正在处理：{file_path}")
                 process_pdf_info(input_directory, file_path, processor)
@@ -112,14 +129,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_directory",
         type=str,
-        required=True,
+        default='shangfei/out/structure/飞机设计手册——第05册(民用飞机总体设计)处理文件节选',
+        # required=True,
         help="Directory containing JSON files"
     )
     parser.add_argument(
         "--config_path",
         type=str,
-        required=True,
+        default='/data/llm/llm-pdf-parsing-main_保存/UniMERNet/configs/demo.yaml',
+        # required=True,
         help="Path to the configuration file"
     )
     args = parser.parse_args()
     main(args.input_directory, args.config_path)
+
