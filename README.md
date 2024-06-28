@@ -141,7 +141,23 @@ python json2markdown.py --input_directory /mnt/petrelfs/panjiancheng/llm-pdf-par
 python markdown2jsonl.py --input_directory /mnt/petrelfs/panjiancheng/llm-pdf-parsing/shangfei/20240617_comac_pdfs_inter_process/structure
 ```
 
-5.单独处理图像数据
+5.（可选）使用大模型处理表格(使用书生多模态为例)
+大模型处理
+```
+python pos-process-figure-mgpu.py --input_directory /mnt/petrelfs/panjiancheng/llm-pdf-parsing/shangfei/20240617_comac_pdfs_inter_process/structure
+python pos-process-table-mgpu.py --input_directory /mnt/petrelfs/panjiancheng/llm-pdf-parsing/shangfei/20240617_comac_pdfs_inter_process/structure
+```
+更新json表格
+```
+python update-ppstru-json.py --input_directory /mnt/petrelfs/panjiancheng/llm-pdf-parsing/shangfei/20240617_comac_pdfs_inter_process/structure
+```
+继续执行上述3和4步骤即可获得最终的训练格式
+
+6.基于jsonl的数据清洗，可进行数据脱敏和正则删除异常值
+```
+python clean-jsonl.py
+```
+
 
 ## 不同的json结构
 以_ocr为结尾的json格式:
