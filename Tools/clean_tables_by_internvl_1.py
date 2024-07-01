@@ -15,8 +15,8 @@ def contains_table(chat_output):
 # 处理数据并复制文件
 def process_data_and_copy_files(data, source_directory, destination_directory):
     for item in data:
-        if contains_table(item["chat_output"]):
-            item["is_rule"] = True
+        print(item)
+        if item["is_rule"]:
             # 复制文件到指定目录
             src = os.path.join(source_directory, item["image_name"])
             dest = os.path.join(destination_directory, os.path.basename(item["image_name"]))

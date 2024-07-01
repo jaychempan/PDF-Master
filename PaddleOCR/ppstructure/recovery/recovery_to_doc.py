@@ -104,29 +104,29 @@ def convert_info_to_json(img, res, save_folder, img_name):
                         }
                     ]
                 })
-                if region_idx + 1 < len(page) and page[region_idx + 1]["type"].lower() == 'figure_caption':
-                    image_block["blocks"].append({
-                        "bbox": region["bbox"],
-                        "type": "image_caption",
-                        "lines": []
-                    })
-                    for span in page[region_idx + 1]["res"]:
-                        image_block["blocks"][-1]["lines"].append({
-                            "bbox": cal_bbox(span["text_region"]),
-                            "spans": [
-                                {
-                                    "bbox": cal_bbox(span["text_region"]),
-                                    "content": span["text"] if "text" in span else span["embedding"],
-                                    "type": "text",
-                                }
-                            ]
-                        })
-                else:
-                    image_block["blocks"].append({
-                        "bbox": region["bbox"],
-                        "type": "image_caption",
-                        "lines": []
-                    })
+                # if region_idx + 1 < len(page) and page[region_idx + 1]["type"].lower() == 'figure_caption':
+                #     image_block["blocks"].append({
+                #         "bbox": region["bbox"],
+                #         "type": "image_caption",
+                #         "lines": []
+                #     })
+                #     for span in page[region_idx + 1]["res"]:
+                #         image_block["blocks"][-1]["lines"].append({
+                #             "bbox": cal_bbox(span["text_region"]),
+                #             "spans": [
+                #                 {
+                #                     "bbox": cal_bbox(span["text_region"]),
+                #                     "content": span["text"] if "text" in span else span["embedding"],
+                #                     "type": "text",
+                #                 }
+                #             ]
+                #         })
+                # else:
+                #     image_block["blocks"].append({
+                #         "bbox": region["bbox"],
+                #         "type": "image_caption",
+                #         "lines": []
+                #     })
 
                 page_info["images"].append(image_block)
                 page_info["preproc_blocks"].append(image_block)
@@ -157,30 +157,30 @@ def convert_info_to_json(img, res, save_folder, img_name):
                     ]
                 })
 
-                if region_idx + 1 < len(page) and page[region_idx + 1]["type"].lower() == 'table_caption':
-                    table_block["blocks"].append({
-                        "bbox": region["bbox"],
-                        "type": "table_caption",
-                        "lines": []
-                    })
-                    for span in page[region_idx + 1]["res"]:
-                        table_block["blocks"][-1]["lines"].append({
-                            "bbox": cal_bbox(span["text_region"]),
-                            "spans": [
-                                {
-                                    "bbox": cal_bbox(span["text_region"]),
-                                    "content": span["text"],
-                                    "type": "text",
-                                }
-                            ]
-                        })
+                # if region_idx + 1 < len(page) and page[region_idx + 1]["type"].lower() == 'table_caption':
+                #     table_block["blocks"].append({
+                #         "bbox": region["bbox"],
+                #         "type": "table_caption",
+                #         "lines": []
+                #     })
+                #     for span in page[region_idx + 1]["res"]:
+                #         table_block["blocks"][-1]["lines"].append({
+                #             "bbox": cal_bbox(span["text_region"]),
+                #             "spans": [
+                #                 {
+                #                     "bbox": cal_bbox(span["text_region"]),
+                #                     "content": span["text"],
+                #                     "type": "text",
+                #                 }
+                #             ]
+                #         })
 
-                else:
-                    table_block["blocks"].append({
-                        "bbox": region["bbox"],
-                        "type": "table_caption",
-                        "lines": []
-                    })
+                # else:
+                #     table_block["blocks"].append({
+                #         "bbox": region["bbox"],
+                #         "type": "table_caption",
+                #         "lines": []
+                #     })
                 page_info["tables"].append(table_block)
                 page_info["preproc_blocks"].append(table_block)
 

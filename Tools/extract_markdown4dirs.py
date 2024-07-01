@@ -4,7 +4,7 @@ import shutil
 def extract_markdown_files(src_dir):
     # 定义目标目录路径
     parent_dir = os.path.dirname(src_dir)
-    target_dir = os.path.join(parent_dir, "markdown_cnocr")
+    target_dir = os.path.join(parent_dir, "markdown")
     
     # 如果目标目录不存在，则创建
     if not os.path.exists(target_dir):
@@ -23,5 +23,5 @@ def extract_markdown_files(src_dir):
                     print(f"复制文件 {file} 到 {target_dir}")
 
 # 示例用法
-src_directory = "/mnt/petrelfs/panjiancheng/llm-pdf-parsing/data/output/16pdfs_process/structure"
+src_directory = "/mnt/petrelfs/panjiancheng/llm-pdf-parsing/data/output/bench_process/structure"
 extract_markdown_files(src_directory)

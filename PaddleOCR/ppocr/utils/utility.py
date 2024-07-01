@@ -123,11 +123,21 @@ def check_and_read(img_path):
         # fitz = try_import("fitz")
         from PIL import Image
         from PyPDF2 import PdfFileReader
-        from pdf2image import convert_from_path
+        from pdf2image import convert_from_path, convert_from_bytes
         imgs = []
         try:
-            # Convert PDF to images, 如果显存会超的话，可以调整dpi
-            pages = convert_from_path(img_path, dpi=200)
+            if img_path:
+                # 判断img_path是否为二进制数据
+                if isinstance(img_path, bytes):
+                    # Convert PDF to images from binary data
+                    pages = convert_from_bytes(img_path, dpi=200)
+                elif os.path.isfile(img_path):
+                    # Convert PDF to images from file path
+                    pages = convert_from_path(img_path, dpi=200)
+                else:
+                    raise ValueError("Invalid img_path provided")
+            else:
+                raise ValueError("img_path must be provided")
             
             for page in pages:
                 img = np.array(page)
@@ -136,10 +146,13 @@ def check_and_read(img_path):
             
             return imgs, False, True
         except Exception as e:
-            # print(f"Error reading PDF for {img_path}: {e}")
+            # 记录错误日志
             with open("error_log.txt", "a") as log_file:
-                log_file.write(f"Error reading PDF for {img_path}: {e}\n")
-                return None, False, False
+                if isinstance(img_path, bytes):
+                    log_file.write(f"Error reading PDF from binary data: {e}\n")
+                else:
+                    log_file.write(f"Error reading PDF from {img_path}: {e}\n")
+            return None, False, False
         # with fitz.open(img_path) as pdf:
         #     for pg in range(0, pdf.page_count):
         #         page = pdf[pg]

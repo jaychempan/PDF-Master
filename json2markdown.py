@@ -63,29 +63,29 @@ def process_one_block(page_info, markdown_content, page_idx, block_idx):
                         one_text += content + ' '
         # print(one_text)
         markdown_content.append(f"{one_text}")
-    # elif block_type == "image":
-    #     one_image_body = ""
-    #     one_image_caption = ""
-    #     for block in block["blocks"]: # 里面可能有image_body和image_block
-    #         if block['type'] == "image_body":
-    #             for line in block["lines"]:
-    #                 fig_idx = line['fig_idx']
-    #                 for span in line["spans"]:
-    #                     if span["type"] == "image":
-    #                         # print(fig_block[fig_idx]['blocks'][0]['lines'][-1]['spans'][-1])
-    #                         content = fig_block[fig_idx]['blocks'][0]['lines'][-1]['spans'][-1]['content']
-    #                         one_image_body += f"\n\n{content}\n\n"
-    #                         # image_path = span['image_path']
-    #                         # one_image_body += f"![Figure {page_idx}]({image_path})\n\n"
+    elif block_type == "image":
+        one_image_body = ""
+        one_image_caption = ""
+        for block in block["blocks"]: # 里面可能有image_body和image_block
+            if block['type'] == "image_body":
+                for line in block["lines"]:
+                    fig_idx = line['fig_idx']
+                    for span in line["spans"]:
+                        if span["type"] == "image":
+                            # print(fig_block[fig_idx]['blocks'][0]['lines'][-1]['spans'][-1])
+                            # content = fig_block[fig_idx]['blocks'][0]['lines'][-1]['spans'][-1]['content']
+                            # one_image_body += f"\n\n{content}\n\n"
+                            image_path = span['image_path']
+                            one_image_body += f"![Figure {page_idx}]({image_path})\n\n"
                             
-    #         elif block['type'] == "image_caption":
-    #             for line in block["lines"]:
-    #                 for span in line["spans"]:
-    #                     if span["type"] == "text": # 后面可以扩展行内公式（表格同理）
-    #                         content = span['content']
-    #                         one_image_body += content
-    #     markdown_content.append(f"{one_image_body}")
-    #     markdown_content.append(f"{one_image_caption}")
+            elif block['type'] == "image_caption":
+                for line in block["lines"]:
+                    for span in line["spans"]:
+                        if span["type"] == "text": # 后面可以扩展行内公式（表格同理）
+                            content = span['content']
+                            one_image_body += content
+        markdown_content.append(f"{one_image_body}")
+        markdown_content.append(f"{one_image_caption}")
     elif block_type == "table":
         one_image_body = ""
         one_image_caption = ""
@@ -96,10 +96,10 @@ def process_one_block(page_info, markdown_content, page_idx, block_idx):
                     for span in line["spans"]:
                         if span["type"] == "image":
                             # print(table_block[table_idx]['blocks'][0]['lines'][-1]['spans'][-1])
-                            content = table_block[table_idx]['blocks'][0]['lines'][-1]['spans'][-1]['content']
-                            one_image_body += f"\n\n{content}\n\n"
-                            # image_path = span['image_path']
-                            # one_image_body += f"![Table {page_idx}]({image_path})\n\n"
+                            # content = table_block[table_idx]['blocks'][0]['lines'][-1]['spans'][-1]['content']
+                            # one_image_body += f"\n\n{content}\n\n"
+                            image_path = span['image_path']
+                            one_image_body += f"![Table {page_idx}]({image_path})\n\n"
             elif block['type'] == "table_caption":
                 for line in block["lines"]:
                     for span in line["spans"]:
@@ -160,7 +160,9 @@ def process_directory(directory_path):
                             markdown_path = os.path.join(dir_path, markdown_file_name)
                             with open(markdown_path, 'w', encoding='utf-8') as md_file:
                                 md_file.write("\n".join(markdown_content))
-                            print(f"Markdown saved to {markdown_path}")
+                            # print(f"Markdown saved to {markdown_path}")
+                        else:
+                            print(f"Markdown not saved to {json_file_path}")
                 break
         break
 

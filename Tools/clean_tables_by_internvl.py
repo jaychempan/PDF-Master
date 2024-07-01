@@ -115,14 +115,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_dir",
         type=str,
-        default='./output',
+        default='/mnt/petrelfs/panjiancheng/llm-pdf-parsing/data',
         help="Directory to store individual JSON outputs.",
     )
 
     parser.add_argument(
         "--final_output_path",
         type=str,
-        default='./merged_figures.json',
+        default='/mnt/petrelfs/panjiancheng/llm-pdf-parsing/data/tables_clean_by_internvl.json',
         help="Path to store the merged JSON output.",
     )
 
