@@ -1,4 +1,8 @@
 # 大模型PDF文档解析
+<div id="top"></div>
+<div align="left">
+[English](README.md) | [简体中文](README_zh-CN.md)
+</div>
 ## 项目简介
 
 主要针对LLM领域数据中的pdf解析，完成对批量PDF转换成LLM训练数据。首先进行版面识别得到结构化的json输出，然后对一些难处理的公式、图片和表格等进行后处理更新结构化的json，最终组装成markdown文件。
