@@ -125,17 +125,11 @@ def check_and_read(img_path):
         from PyPDF2 import PdfFileReader
         from pdf2image import convert_from_path, convert_from_bytes
         imgs = []
+
         try:
-            if img_path:
-                # 判断img_path是否为二进制数据
-                if isinstance(img_path, bytes):
-                    # Convert PDF to images from binary data
-                    pages = convert_from_bytes(img_path, dpi=200)
-                elif os.path.isfile(img_path):
-                    # Convert PDF to images from file path
-                    pages = convert_from_path(img_path, dpi=200)
-                else:
-                    raise ValueError("Invalid img_path provided")
+            if os.path.isfile(img_path):
+                # Convert PDF to images from file path
+                pages = convert_from_path(img_path, dpi=200)
             else:
                 raise ValueError("img_path must be provided")
             

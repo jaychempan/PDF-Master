@@ -274,14 +274,16 @@ jsonl:
 
 ## 感谢
 
-[UniMERNet](https://github.com/opendatalab/UniMERNet)
+- [UniMERNet](https://github.com/opendatalab/UniMERNet): A Universal Network for Real-World Mathematical Expression Recognition
 
-[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/tree/main) [PPStructure](https://github.com/PaddlePaddle/PaddleOCR/blob/main/ppstructure/README_ch.md)
+- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/tree/main): Awesome multilingual OCR toolkits based on PaddlePaddle.
 
-[InternVL](https://github.com/OpenGVLab/InternVL/tree/main)
+- [PPStructure](https://github.com/PaddlePaddle/PaddleOCR/blob/main/ppstructure/README_ch.md): An intelligent document analysis system.
 
-[CnSTD](https://github.com/breezedeus/CnSTD)
+- [InternVL](https://github.com/OpenGVLab/InternVL/tree/main): nternVL Family: A Pioneering Open-Source Alternative to GPT-4V.
 
-[Miner-PDF-Benchmark](https://github.com/opendatalab/Miner-PDF-Benchmark/tree/main)
+- [CnSTD](https://github.com/breezedeus/CnSTD): CnSTD: 基于 PyTorch/MXNet 的 中文/英文 场景文字检测（Scene Text Detection）、数学公式检测（Mathematical Formula Detection, MFD）、篇章分析（Layout Analysis）的Python3 包
 
-[MinerU](https://github.com/opendatalab/MinerU)
+- [Miner-PDF-Benchmark](https://github.com/opendatalab/Miner-PDF-Benchmark/tree/main): MPB (Miner-PDF-Benchmark) is an end-to-end PDF document comprehension evaluation suite designed for large-scale model data scenarios.
+
+- [MinerU](https://github.com/opendatalab/MinerU): MinerU is a one-stop, open-source data extraction tool，supports PDF/webpage/e-book extraction.
