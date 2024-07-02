@@ -72,7 +72,18 @@ pip install transformers==4.33.0
 ```
 
 ## 使用方法
+直接运行`run`文件目录下的运行shell程序：
+```
+conda activate llmpro
+# 不处理表格和图片
+bash run/run_wo_fig_tab.sh
 
+# 同时处理表格和图片（使用大模型处理）
+bash run/run_both_fig_tab.sh
+
+# 只处理表格（使用大模型处理）
+bash run/run_wo_fig.sh
+```
 打开`pipline`文件目录,按照下面步骤顺序进行处理：
 
 1.执行`pdf-structure.py`解析出pdf的结构，生成结构化的json文件
