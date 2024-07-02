@@ -1,11 +1,11 @@
 <div id="top"></div>
 <div align="center">
 
-[![stars](https://img.shields.io/github/stars/opendatalab/MinerU.svg)](https://github.com/opendatalab/MinerU)
-[![forks](https://img.shields.io/github/forks/opendatalab/MinerU.svg)](https://github.com/opendatalab/MinerU)
-[![license](https://img.shields.io/github/license/opendatalab/MinerU.svg)](https://github.com/opendatalab/MinerU/tree/main/LICENSE)
-[![issue resolution](https://img.shields.io/github/issues-closed-raw/opendatalab/MinerU)](https://github.com/opendatalab/MinerU/issues)
-[![open issues](https://img.shields.io/github/issues-raw/opendatalab/MinerU)](https://github.com/opendatalab/MinerU/issues)
+[![stars](https://img.shields.io/github/stars/jaychempan/llm-pdf-parsing.svg)](https://github.com/jaychempan/llm-pdf-parsing)
+[![forks](https://img.shields.io/github/forks/jaychempan/llm-pdf-parsing.svg)](https://github.com/jaychempan/llm-pdf-parsing)
+[![license](https://img.shields.io/github/license/jaychempan/llm-pdf-parsing.svg)](https://github.com/jaychempan/llm-pdf-parsing/tree/main/LICENSE)
+[![issue resolution](https://img.shields.io/github/issues-closed-raw/jaychempan/llm-pdf-parsing)](https://github.com/jaychempan/llm-pdf-parsing/issues)
+[![open issues](https://img.shields.io/github/issues-raw/jaychempan/llm-pdf-parsing)](https://github.com/jaychempan/llm-pdf-parsing/issues)
 
 [English](README.md) | [简体中文](README_zh-CN.md)
 
