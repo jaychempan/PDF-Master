@@ -1,7 +1,9 @@
 # 大模型PDF文档解析
 <div id="top"></div>
 <div align="left">
+
 [English](README.md) | [简体中文](README_zh-CN.md)
+
 </div>
 ## 项目简介
 
