@@ -142,8 +142,10 @@ python clean-jsonl.py --input_file /path/to/jsonl/ --delete_strs "key1" "key2"
 ## 不同的json结构
 
 结构化json文件(以_ocr为结尾的json格式)
+
 <details>
   <summary>展开看具体json格式数据结构</summary>
+
 ```
 =# 主要针对pdf进行解析
 pdf_info = {
@@ -243,7 +245,9 @@ lines 内部包含：
 }
 
 ```
+
 </details>
+
 大模型训练jsonl格式（每个markdown为jsonl文件的一条元数据）：
 ```
 {
