@@ -14,14 +14,14 @@ logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime
 
 # 定义参数字典
 args = {
-    '--det_model_dir': './inference/det/ch/ch_PP-OCRv4_det_infer', 
-    '--rec_model_dir': './inference/rec/ch/ch_PP-OCRv4_rec_infer',
-    '--rec_char_dict_path': './PaddleOCR/ppocr/utils/ppocr_keys_v1.txt',
-    '--table_model_dir': './inference/table/ch_ppstructure_mobile_v2.0_SLANet_infer',
-    '--table_char_dict_path': './PaddleOCR/ppocr/utils/dict/table_structure_dict_ch.txt',
-    '--layout_model_dir': './inference/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer',
-    '--layout_dict_path': './PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
-    '--vis_font_path': './ppocr_img/fonts/simfang.ttf',
+    '--image_dir': '../demo/demo.pdf',
+    '--det_model_dir': '../weights/ppocr_weights/det/ch/ch_PP-OCRv4_det_infer', 
+    '--rec_model_dir': '../weights/ppocr_weights/rec/ch/ch_PP-OCRv4_rec_infer',
+    '--rec_char_dict_path': '../paddleocr/ppocr/utils/ppocr_keys_v1.txt',
+    '--table_model_dir': '../weights/ppocr_weights/table/ch_ppstructure_mobile_v2.0_SLANet_infer',
+    '--table_char_dict_path': '../paddleocr/ppocr/utils/dict/table_structure_dict_ch.txt',
+    '--layout_model_dir': '../weights/ppocr_weights/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer',
+    '--layout_dict_path': '../paddleocr/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
     '--recovery': 'True',
     '--output': './shangfei/default_output/',
     '--use_pdf2docx_api': 'False',

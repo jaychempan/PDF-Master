@@ -1,7 +1,9 @@
 import json
 import re
 
-def process_jsonl(input_file, output_file, delete_strs):
+def process_jsonl(input_file, delete_strs):
+    output_file = input_file.replace('.jsonl', '_clean.jsonl')
+    
     with open(input_file, 'r', encoding='utf-8') as infile, open(output_file, 'w', encoding='utf-8') as outfile:
         for line in infile:
             data = json.loads(line.strip())
@@ -28,8 +30,13 @@ def process_jsonl(input_file, output_file, delete_strs):
             outfile.write(json.dumps(data, ensure_ascii=False) + '\n')
 
 # 使用示例
-input_file = '/mnt/petrelfs/panjiancheng/llm-pdf-parsing/data/output/20240605_comac_pdfs_process/20240605_comac_pdfs_process_wo_fig.jsonl'
-output_file = '/mnt/petrelfs/panjiancheng/llm-pdf-parsing/data/output/20240605_comac_pdfs_process/20240605_comac_pdfs_process_wo_fig_clean.jsonl'
-delete_strs = ['商飞', '中国商用飞机有限责任公司']  # 可以添加多个要替换的字符串
+if __name__ == "__main__":
+    import argparse
 
-process_jsonl(input_file, output_file, delete_strs)
+    parser = argparse.ArgumentParser(description='Process JSONL files.')
+    parser.add_argument('--input_file', type=str, help='Path to the input JSONL file')
+    parser.add_argument('--delete_strs', nargs='+', type=str, help='Strings to be replaced with "X"')
+
+    args = parser.parse_args()
+
+    process_jsonl(args.input_file, args.delete_strs)

@@ -97,7 +97,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--root_directory",
         type=str,
-        default='/mnt/petrelfs/panjiancheng/llm-pdf-parsing/data/output/20240605_comac_pdfs_process/structure',
+        required=True,
         help="Root directory containing subdirectories with images.",
     )
 
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_path",
         type=str,
-        default='/mnt/petrelfs/panjiancheng/HFs/InternVL-Chat-V1-5',
+        default='../../HFs/InternVL-Chat-V1-5',
         help="Path to the pretrained model.",
     )
 

@@ -129,15 +129,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_directory",
         type=str,
-        default='shangfei/out/structure/飞机设计手册——第05册(民用飞机总体设计)处理文件节选',
-        # required=True,
+        required=True,
         help="Directory containing JSON files"
     )
     parser.add_argument(
         "--config_path",
         type=str,
-        default='/data/llm/llm-pdf-parsing-main_保存/UniMERNet/configs/demo.yaml',
-        # required=True,
+        required=True,
         help="Path to the configuration file"
     )
     args = parser.parse_args()
