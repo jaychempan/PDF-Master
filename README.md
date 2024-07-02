@@ -103,7 +103,6 @@ python ../paddleocr/ppstructure/predict_system.py --image_dir /path/to/pdf/ --de
 python pos-process.py --input_directory /path/to/out/structure
 # 多卡多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
 python pos-process-mgpu.py --input_directory ../data/output/structure --config_path ./weights/unimernet/demo.yaml --num_processes 2
-
 ```
 
 3.执行`json2markdown.py`将json文件转换成markdown格式
@@ -120,8 +119,8 @@ python markdown2jsonl.py --input_directory ../data/output/structure
 5.（可选）使用大模型处理表格(使用书生多模态为例)
 大模型处理图片
 ```
-python pos-process-figure-mgpu.py --input_directory ../data/output/structure
-python pos-process-table-mgpu.py --input_directory ../data/output/structure
+python pos-process-figure-mgpu.py --input_directory ../data/output/structure --process figures[tables,both]
+python pos-process-table-mgpu.py --input_directory ../data/output/structure --process figures[tables,both]
 ```
 更新结构化的json文件
 ```
@@ -131,7 +130,7 @@ python update-ppstru-json.py --input_directory ../data/output/structure
 
 6.基于jsonl的数据清洗，可进行数据脱敏和正则化删除异常值
 ```
-python clean-jsonl.py --input_file /path/to/jsonl/ --delete_strs "key1" "key2"
+python clean-jsonl.py --input_file /path/to/jsonl --delete_strs "key1" "key2"
 ```
 
 ## 不同的json文件
