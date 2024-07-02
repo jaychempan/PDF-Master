@@ -125,6 +125,7 @@ python markdown2jsonl.py --input_directory ../data/output/structure
 ```
 python pos-process-figure-mgpu.py --input_directory ../data/output/structure
 python pos-process-table-mgpu.py --input_directory ../data/output/structure
+```
 更新json表格
 ```
 python update-ppstru-json.py --input_directory ../data/output/structure
