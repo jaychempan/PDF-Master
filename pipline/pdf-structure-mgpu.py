@@ -7,6 +7,9 @@ import copy
 import logging
 from datetime import datetime
 
+# Ensure logs directory exists
+os.makedirs('../logs', exist_ok=True)
+
 # 设置日志记录
 timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 log_filename = f'../logs/pdf-structure-mgpu-{timestamp}.log'

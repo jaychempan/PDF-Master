@@ -9,11 +9,11 @@ from lmdeploy import pipeline
 from lmdeploy.vl import load_image
 
 # Ensure logs directory exists
-os.makedirs('logs', exist_ok=True)
+os.makedirs('../logs', exist_ok=True)
 
 # Setup logging
 timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-log_filename = f'logs/pos-process-table-{timestamp}.log'
+log_filename = f'../logs/pos-process-table-{timestamp}.log'
 logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 
 def distribute_work(root_directory, gpus):

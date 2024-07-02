@@ -7,9 +7,12 @@ import logging
 from datetime import datetime
 from tqdm import tqdm
 
+# Ensure logs directory exists
+os.makedirs('../logs', exist_ok=True)
+
 # 设置日志记录
 timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-log_filename = f'logs/pos-process-mgpu-{timestamp}.log'
+log_filename = f'../logs/pos-process-mgpu-{timestamp}.log'
 logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 
 def is_equations_empty(directory):
