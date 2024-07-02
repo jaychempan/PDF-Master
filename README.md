@@ -1,7 +1,7 @@
 # 大模型PDF文档解析-llm-pdf-parsing
 ## 项目介绍
 
-主要针对LLM领域数据中的pdf解析，完成对批量PDF转换成LLM训练数据。首先进行版面识别得到结构化的json输出，然后对一些难处理的公式、图片和表格等进行后处理（生成markdown格式）
+主要针对LLM领域数据中的pdf解析，完成对批量PDF转换成LLM训练数据。首先进行版面识别得到结构化的json输出，然后对一些难处理的公式、图片和表格等进行后处理更新结构化的json，最终组装成markdown文件
 
 llm-pdf-parsing的框架:
 
@@ -71,6 +71,8 @@ pip install transformers==4.33.0
 
 ```
 python pdf-structure.py
+# 多卡多进程版本（充分利用显卡资源的方式）
+python pdf-structure-mgpu.py --input_directory ./data/input/ --output_directory ./data/output/ --num_processes 2
 ```
 修改`args`参数列表即可
 ```
@@ -94,17 +96,12 @@ args = {
 or 
 
 python ./PaddleOCR/ppstructure/predict_system.py --image_dir /path/to/pdf/ --det_model_dir ./weights/ppocr_weights/det/ch/ch_PP-OCRv4_det_infer --rec_model_dir ./weights/ppocr_weights/rec/ch/ch_PP-OCRv4_rec_infer --rec_char_dict_path ./PaddleOCR/ppocr/utils/ppocr_keys_v1.txt --table_model_dir ./weights/ppocr_weights/table/ch_ppstructure_mobile_v2.0_SLANet_infer --table_char_dict_path ./PaddleOCR/ppocr/utils/dict/table_structure_dict_ch.txt --layout_model_dir ./weights/ppocr_weights/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer --layout_dict_path ./PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt --recovery True --output /path/to/out/ --use_pdf2docx_api False --mode structure --return_word_box False --use_gpu True
-
-# 多卡多进程版本（充分利用显卡资源的方式）
-
-python pdf-structure-mgpu.py --input_directory ./data/input/ --output_directory ./data/output/ --num_processes 2
 ```
+
 2.执行`pos-process.py`对公式，图像，表格进行后处理，更新前一步骤生成的json文件（处理指定目录下的所有子目录中的json文件）
 ```
 python pos-process.py --input_directory /path/to/out/structure
-
 # 多卡多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
-
 python pos-process-mgpu.py --input_directory ../data/output/structure --config_path ./weights/unimernet/demo.yaml --num_processes 2
 
 ```
@@ -121,25 +118,23 @@ python markdown2jsonl.py --input_directory ../data/output/structure
 ```
 
 5.（可选）使用大模型处理表格(使用书生多模态为例)
-大模型处理
+大模型处理图片
 ```
 python pos-process-figure-mgpu.py --input_directory ../data/output/structure
 python pos-process-table-mgpu.py --input_directory ../data/output/structure
 ```
-更新json表格
+更新结构化的json文件
 ```
 python update-ppstru-json.py --input_directory ../data/output/structure
 ```
 继续执行上述3和4步骤即可获得最终的训练格式
 
-6.基于jsonl的数据清洗，可进行数据脱敏和正则删除异常值
+6.基于jsonl的数据清洗，可进行数据脱敏和正则化删除异常值
 ```
 python clean-jsonl.py --input_file /path/to/jsonl/ --delete_strs "key1" "key2"
 ```
 
-
-
-## 不同的json结构
+## 不同的json文件
 
 1.结构化json文件(以_ocr为结尾的json格式)
 
@@ -273,3 +268,5 @@ lines 内部包含：
 - [Miner-PDF-Benchmark](https://github.com/opendatalab/Miner-PDF-Benchmark/tree/main): MPB (Miner-PDF-Benchmark) is an end-to-end PDF document comprehension evaluation suite designed for large-scale model data scenarios.
 
 - [MinerU](https://github.com/opendatalab/MinerU): MinerU is a one-stop, open-source data extraction tool，supports PDF/webpage/e-book extraction.
+
+## 感谢
