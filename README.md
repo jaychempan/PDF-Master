@@ -77,18 +77,21 @@ python pdf-structure.py
 修改`args`参数列表即可
 ```
 args = {
-    '--image_dir': '/path/to/pdf',
-    '--det_model_dir': './whl/det/ch/ch_PP-OCRv4_det_infer', 
-    '--rec_model_dir': './whl/rec/ch/ch_PP-OCRv4_rec_infer',
-    '--rec_char_dict_path': './PaddleOCR/ppocr/utils/ppocr_keys_v1.txt',
-    '--table_model_dir': './whl/table/ch_ppstructure_mobile_v2.0_SLANet_infer',
-    '--table_char_dict_path': './PaddleOCR/ppocr/utils/dict/table_structure_dict_ch.txt',
-    '--layout_model_dir': './whl/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer',
-    '--layout_dict_path': './PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
+    '--image_dir': '../demo/demo.pdf',
+    '--det_model_dir': '../weights/ppocr_weights/det/ch/ch_PP-OCRv4_det_infer', 
+    '--rec_model_dir': '../weights/ppocr_weights/rec/ch/ch_PP-OCRv4_rec_infer',
+    '--rec_char_dict_path': '../paddleocr/ppocr/utils/ppocr_keys_v1.txt',
+    '--table_model_dir': '../weights/ppocr_weights/table/ch_ppstructure_mobile_v2.0_SLANet_infer',
+    '--table_char_dict_path': '../paddleocr/ppocr/utils/dict/table_structure_dict_ch.txt',
+    '--layout_model_dir': '../weights/ppocr_weights/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer',
+    '--layout_dict_path': '../paddleocr/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt',
     '--vis_font_path': './ppocr_img/fonts/simfang.ttf',
-    '--recovery': 'False',
-    '--output': '/path/to/out',
-    '--use_gpu': 'False'
+    '--recovery': 'True',
+    '--output': '../data/demo/',
+    '--use_pdf2docx_api': 'False',
+    '--mode': 'structure',
+    '--return_word_box': 'False',
+    '--use_gpu': 'True'
 }
 
 or 
@@ -101,10 +104,6 @@ python ./PaddleOCR/ppstructure/predict_system.py --image_dir /path/to/pdf/ --det
 
 python ./PaddleOCR/ppstructure/predict_system.py --image_dir /path/to/pdf/ --det_model_dir ./inference/det/ch/ch_PP-OCRv4_det_infer --rec_model_dir ./inference/rec/ch/ch_PP-OCRv4_rec_infer --rec_char_dict_path ./PaddleOCR/ppocr/utils/ppocr_keys_v1.txt --table_model_dir ./inference/table/ch_ppstructure_mobile_v2.0_SLANet_infer --table_char_dict_path ./PaddleOCR/ppocr/utils/dict/table_structure_dict_ch.txt --layout_model_dir ./inference/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer --layout_dict_path ./PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt --recovery True --output /path/to/out/ --use_pdf2docx_api False --mode structure --return_word_box False --use_gpu True --use_mp True --total_process_num 8
 
-# 单卡多进程版本
-
-pdf-structure-sgpu.py 对指定目录下的所有pdf文件进行分片处理（可以按照大小进行均等划分）,会多次调用predict_system函数
-
 # 多卡多进程版本（充分利用显卡资源的方式）
 
 python pdf-structure-mgpu.py --input_directory /mnt/petrelfs/panjiancheng/llm-pdf-parsing/shangfei/20240617_comac_pdfs_inter --output_directory /mnt/petrelfs/panjiancheng/llm-pdf-parsing/shangfei/20240617_comac_pdfs_inter_process --num_processes 2
@@ -112,10 +111,6 @@ python pdf-structure-mgpu.py --input_directory /mnt/petrelfs/panjiancheng/llm-pd
 2.执行`pos-process.py`对公式，图像，表格进行后处理，更新前一步骤生成的json文件（处理指定目录下的所有子目录中的json文件）
 ```
 python pos-process.py --input_directory /path/to/out/structure
-
-# 单卡多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
-
-python pos-process-sgpu.py --input_directory shangfei/out/structure  --config_path UniMERNet/configs/demo.yaml --num_processes 2
 
 # 多卡多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
 
@@ -163,10 +158,7 @@ pdf_info = {
 # 每个页面中获取的信息
 page_info = {
         "preproc_blocks": [], # 也是按照顺序（包含所有需要的要素）
-        # "layout_bboxes": [], # 感觉不需要
         "page_idx": page_idx, # 需要更新
-        # "page_size": [595.0, 842.0], # 不重要暂时不处理
-        # "_layout_tree": [], # 好像和layout_bboxes没区别
         "images": [], # 图像包括图像标题放这里
         "tables": [], # 表格包括表格标题放这里
         "interline_equations": [], # 行间公式放在这里
