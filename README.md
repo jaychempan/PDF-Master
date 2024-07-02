@@ -270,7 +270,7 @@ lines 内部包含：
 
 - [PPStructure](https://github.com/PaddlePaddle/PaddleOCR/blob/main/ppstructure/README_ch.md): An intelligent document analysis system.
 
-- [InternVL](https://github.com/OpenGVLab/InternVL/tree/main): nternVL Family: A Pioneering Open-Source Alternative to GPT-4V.
+- [InternVL](https://github.com/OpenGVLab/InternVL/tree/main): InternVL Family: A Pioneering Open-Source Alternative to GPT-4V.
 
 - [CnSTD](https://github.com/breezedeus/CnSTD): CnSTD: 基于 PyTorch/MXNet 的 中文/英文 场景文字检测（Scene Text Detection）、数学公式检测（Mathematical Formula Detection, MFD）、篇章分析（Layout Analysis）的Python3 包
 
