@@ -9,7 +9,7 @@ from datetime import datetime
 
 # 设置日志记录
 timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-log_filename = f'logs/pdf-structure-mgpu-{timestamp}.log'
+log_filename = f'../logs/pdf-structure-mgpu-{timestamp}.log'
 logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 
 # 定义参数字典
@@ -77,7 +77,7 @@ def update_args_with_split(args, split_dir, output_directory):
 
 # 执行预测系统
 def run_predict_system(args_dict, gpu_id, retry_counter, time_counter):
-    command = ['python3', './PaddleOCR/ppstructure/predict_system.py']
+    command = ['python3', '../paddleocr/ppstructure/predict_system.py']
     for key, value in args_dict.items():
         if not key.startswith('--'):
             raise ValueError(f"Invalid parameter '{key}' without '--' prefix")
