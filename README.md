@@ -1,7 +1,7 @@
 # 大模型PDF文档解析-llm-pdf-parsing
 ## 项目介绍
 
-主要针对LLM领域数据中的pdf解析，完成对批量PDF转换成LLM训练数据。首先进行版面识别得到结构化的json输出，然后对一些难处理的公式、图片和表格等进行后处理更新结构化的json，最终组装成markdown文件
+主要针对LLM领域数据中的pdf解析，完成对批量PDF转换成LLM训练数据。首先进行版面识别得到结构化的json输出，然后对一些难处理的公式、图片和表格等进行后处理更新结构化的json，最终组装成markdown文件。
 
 llm-pdf-parsing的框架:
 
@@ -9,7 +9,7 @@ llm-pdf-parsing的框架:
 
 ## 环境安装
 
-环境安装可以参考：https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/ppstructure/recovery/README_ch.md#2
+部分环境安装可以参考[PaddleOCR 安装指南](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/ppstructure/recovery/README_ch.md#2)或者按照下面的安装指南进行安装：
 
 ```
 conda create --name llmpro python=3.9
