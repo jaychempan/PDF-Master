@@ -3,7 +3,11 @@
 
 主要针对LLM领域数据中的pdf解析，完成对批量PDF转换成LLM训练数据
 
-PDF解析：进行版面识别得到结构化的json输出，然后对一些难处理的图片表格等进行后处理（生成markdown格式）
+PDF解析：进行版面识别得到结构化的json输出，然后对一些难处理的图片表格等进行后处理（生成markdown格式），而后可以进行图像表格处理等操作
+
+llm-pdf-parsing的框架:
+
+![](assets/llm-pdf-parsing-v2-pipline.png)
 
 ## 环境安装
 
@@ -35,47 +39,35 @@ pip install transformers==4.33.0
 以下是`llm-pdf-parsing`项目的目录结构说明
 ```
 .
-├── inference # 存放的是whl包文件中的基本权重，一般使用whl默认权重，如果有更好的权重可以放到可以替换成
-│   ├── cls # 分类
-│   ├── det # 检测
-│   ├── layout # 布局
-│   ├── rec # 重建
-│   └── table # 表格
+├── assets
+├── data # 存放数据
 ├── LICENSE
-├── PaddleOCR  # PaddleOCR的主目录，里面包括各种函数，包括训练模型等
-│   ├── applications
-│   ├── benchmark
-│   ├── configs
-│   ├── deploy
-│   ├── doc
-│   ├── __init__.py
-│   ├── LICENSE
-│   ├── MANIFEST.in
-│   ├── paddleocr.py
-│   ├── ppocr
-│   ├── PPOCRLabel
-│   ├── ppstructure # 主要用来解析pdf版面的结构的代码
-│   ├── README_ch.md
-│   ├── README_en.md
-│   ├── README.md
-│   ├── requirements.txt
-│   ├── setup.py
-│   ├── StyleText
-│   ├── test_tipc
-│   ├── tools
-│   └── train.sh
-├── pdf-structure.py # 执行PaddleOCR里面的ppstructure主函数，获得结构化的数据json
-├── pos-process.py # 执行PaddleOCR后的后处理，针对难处理的数据进行处理，获得后处理后的结构化数据json
-├── json2markdown.py # 将结构化的json转换成markdown
-├── markdown2jsonl.py # 将markdown转换成可训练的jsonl格式
-├── clean-jsonl.py # 将jsonl训练格式进行清洗（脱敏等）
+├── logs # 存放处理日志
+├── paddleocr  # PaddleOCR的主目录，里面包括各种函数，包括训练模型等
+├── pipline  # 处理pdf的主要程序目录
+│   ├── clean-jsonl.py
+│   ├── json2markdown.py
+│   ├── markdown2jsonl.py
+│   ├── pdf-structure-mgpu.py
+│   ├── pdf-structure.py
+│   ├── pos-process-figure-mgpu.py
+│   ├── pos-process-mgpu.py
+│   ├── pos-process.py
+│   ├── pos-process-single-cnocr.py
+│   ├── pos-process-single.py
+│   ├── pos-process-table-mgpu.py
+│   └── update-ppstru-json.py
 ├── README.md
-└── data  # 数据
-    ├── input
-    └── output
+├── tools # 存放好用的工具函数
+└── weights # 存放模型权重
+    ├── pix2text-mfr
+    ├── ppocr_weights
+    ├── readme.txt
+    └── unimernet
 ```
 
 ## 使用
+打开`pipline`文件目录
 
 1.执行`pdf-structure.py`解析出pdf的结构，生成结构化的json文件
 
