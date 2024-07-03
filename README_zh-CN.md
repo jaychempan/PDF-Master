@@ -8,9 +8,13 @@
 
 ## 项目简介
 
-主要针对LLM领域数据中的pdf解析，完成对批量PDF转换成LLM训练数据。首先进行版面识别得到结构化的json输出，然后对一些难处理的公式、图片和表格等进行后处理更新结构化的json，最终组装成markdown文件。
+在大模型时代下，文档解析是当前的一个难点，目前开源的文档解析框架并没有一个完整的解析流程，包括从文档到最终的jsonl的解析方式。本项目基于一些开源的项目，搭建了一个完整的针对PDF文档的解析框架。首先进行版面识别得到结构化的json输出，然后对一些难处理的公式、图片和表格等进行后处理更新结构化的json，最终组装成markdown文件。项目特点：
+- 包含多进程多线程处理并行加速代码
+- 包含使用开源多模态大模型处理图像和表格的功能
+- 便于二次开发完善，添加更多的功能
 
-llm-pdf-parsing的框架:
+
+本项目完成PDF文档解析的框架如下所示:
 
 ![](assets/llm-pdf-parsing-v2-pipline.png)
 
@@ -72,7 +76,18 @@ pip install transformers==4.33.0
 ```
 
 ## 使用方法
+直接运行`run`文件目录下的shell程序：
+```
+conda activate llmpro
+# 不处理表格和图片
+bash run/run_wo_fig_tab.sh
 
+# 同时处理表格和图片（使用大模型处理）
+bash run/run_both_fig_tab.sh
+
+# 只处理表格（使用大模型处理）
+bash run/run_wo_fig.sh
+```
 打开`pipline`文件目录,按照下面步骤顺序进行处理：
 
 1.执行`pdf-structure.py`解析出pdf的结构，生成结构化的json文件
@@ -278,4 +293,4 @@ lines 内部包含：
 
 - [MinerU](https://github.com/opendatalab/MinerU): MinerU is a one-stop, open-source data extraction tool，supports PDF/webpage/e-book extraction.
 
-## 感谢
+## 鸣谢
