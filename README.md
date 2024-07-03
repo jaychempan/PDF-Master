@@ -6,21 +6,22 @@
 
 </div>
 
-## 项目简介
+## Project Introduction
 
-在大模型时代下，文档解析是当前的一个难点，目前开源的文档解析框架并没有一个完整的解析流程，包括从文档到最终的jsonl的解析方式。本项目基于一些开源的项目，搭建了一个完整的针对PDF文档的解析框架。首先进行版面识别得到结构化的json输出，然后对一些难处理的公式、图片和表格等进行后处理更新结构化的json，最终组装成markdown文件。项目特点：
-- 包含多进程多线程处理并行加速代码
-- 包含使用开源多模态大模型处理图像和表格的功能
-- 便于二次开发完善，添加更多的功能
+In the era of large language models, document parsing has become a significant challenge. Currently, there is no open-source document parsing framework that offers a complete parsing workflow, from document processing to the final JSONL output. This project, based on several open-source projects, builds a comprehensive parsing framework for PDF documents. The process begins with layout recognition to obtain a structured JSON output. Then, post-processing is performed to update the structured JSON for challenging elements like formulas, images, and tables. Finally, the data is assembled into a Markdown file.
 
+Key features of the project include:
+- Multi-process and multi-threading processing for parallel acceleration
+- Integration with open-source multimodal large models for image and table processing
+- Easy for secondary development to add more functionalities
 
-本项目完成PDF文档解析的框架如下所示:
+The framework for parsing PDF documents in this project is as follows:
 
 ![](assets/llm-pdf-parsing-v2-pipline.png)
 
-## 环境安装
+## Environment Installation
 
-部分环境安装可以参考[PaddleOCR 安装指南](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/ppstructure/recovery/README_ch.md#2)或者按照下面的安装指南进行安装：
+For some environment installations, you can refer to the [PaddleOCR Installation Guide](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/ppstructure/recovery/README_ch.md#2) or follow the installation guide below:
 
 ```
 conda create --name llmpro python=3.9
@@ -28,32 +29,32 @@ conda activate llmpro
 python3 -m pip install "paddlepaddle-gpu" -i https://mirror.baidu.com/pypi/simple
 cd llm-pdf-parsing/PaddleOCR
 python3 -m pip install -r ppstructure/recovery/requirements.txt
-# 安装 paddleocr，推荐使用2.6版本
+# Install PaddleOCR, version 2.6 is recommended.
 pip3 install "paddleocr>=2.6"
 
-# markdown转换需要
+# Markdown conversion requires
 pip install markdownify
 
-# 公式支持
+# formula support
 pip install --upgrade unimernet
 pip install transformers==4.40.0 # 需要确保transformers版本号
 sudo apt-get install libmagickwand-dev
 
-# 书生多模态支持，参考（可以单独安装一个新环境）
+# InternVL support, refer to (a new environment can be installed separately)
 https://github.com/OpenGVLab/InternVL/blob/main/INSTALLATION.md
-注意这里的transformer版本
+# Note the version of transformers here
 pip install transformers==4.33.0
 ```
-## 目录结构
-以下是`llm-pdf-parsing`项目的目录结构说明
+## Directory Structure
+The following is an explanation of the directory structure for the `llm-pdf-parsing` project
 ```
 .
 ├── assets
-├── data # 存放数据
+├── data # Folders for archived data
 ├── LICENSE
-├── logs # 存放处理日志
-├── paddleocr  # PaddleOCR的主目录，里面包括各种函数，包括训练模型等
-├── pipline  # 处理pdf的主要程序目录
+├── logs # Folders for log
+├── paddleocr  # PaddleOCR's main directory, which contains various functions, including training models, etc.
+├── pipline  # Main programme folder for pdf processing
 │   ├── clean-jsonl.py
 │   ├── json2markdown.py
 │   ├── markdown2jsonl.py
@@ -67,38 +68,38 @@ pip install transformers==4.33.0
 │   ├── pos-process-table-mgpu.py
 │   └── update-ppstru-json.py
 ├── README.md
-├── tools # 存放好用的工具函数
-└── weights # 存放模型权重
+├── tools # Folders for useful utility functions
+└── weights # Folders where the model weights are stored
     ├── pix2text-mfr
     ├── ppocr_weights
     ├── readme.txt
     └── unimernet
 ```
 
-## 使用方法
-直接运行`run`文件目录下的shell程序：
+## How to use
+Run the shell program directly from the `run` file directory:
 ```
 conda activate llmpro
-# 不处理表格和图片
+# No handling of tables and figures
 bash run/run_wo_fig_tab.sh
 
-# 同时处理表格和图片（使用大模型处理）
+# handling of tables and figures (by InternVL)
 bash run/run_both_fig_tab.sh
 
-# 只处理表格（使用大模型处理）
+# handling of tables (by InternVL)
 bash run/run_wo_fig.sh
 ```
-打开`pipline`文件目录,按照下面步骤顺序进行处理：
+Open the `pipline` file directory and follow the sequence of steps below:
 
-1.执行`pdf-structure.py`解析出pdf的结构，生成结构化的json文件
+1.Execute `pdf-structure.py` to parse out the structure of the pdf to generate a structured json file
 
 ```
 python pdf-structure.py
 
-# 多卡多进程版本（充分利用显卡资源的方式）
+# Multi-card, multi-process version (way to fully utilise GPUs)
 python pdf-structure-mgpu.py --input_directory ./data/input/ --output_directory ./data/output/ --num_processes 2
 ```
-修改`args`参数列表即可
+Just change the `args` parameter list
 ```
 args = {
     '--image_dir': '../demo/demo.pdf',
@@ -117,53 +118,53 @@ args = {
     '--use_gpu': 'True'
 }
 ```
-或者直接运行下面命令
+Or just run the following command:
 ```
 python ../paddleocr/ppstructure/predict_system.py --image_dir /path/to/pdf/ --det_model_dir ./weights/ppocr_weights/det/ch/ch_PP-OCRv4_det_infer --rec_model_dir ./weights/ppocr_weights/rec/ch/ch_PP-OCRv4_rec_infer --rec_char_dict_path ./PaddleOCR/ppocr/utils/ppocr_keys_v1.txt --table_model_dir ./weights/ppocr_weights/table/ch_ppstructure_mobile_v2.0_SLANet_infer --table_char_dict_path ./PaddleOCR/ppocr/utils/dict/table_structure_dict_ch.txt --layout_model_dir ./weights/ppocr_weights/layout/picodet_lcnet_x1_0_fgd_layout_cdla_infer --layout_dict_path ./PaddleOCR/ppocr/utils/dict/layout_dict/layout_cdla_dict.txt --recovery True --output /path/to/out/ --use_pdf2docx_api False --mode structure --return_word_box False --use_gpu True
 ```
 
-2.执行`pos-process.py`对公式，图像，表格进行后处理，更新前一步骤生成的json文件（处理指定目录下的所有子目录中的json文件）
+2.Execute `pos-process.py` to post-process formulas, images, tables, update json files generated in previous step (process json files in all subdirectories of specified directory)
 ```
 python pos-process.py --input_directory /path/to/out/structure
 
-# 多卡多进程版本，会多次调用pos-process-single函数(处理指定目录下的json文件)
+# Multi-card, multi-process version, will call the pos-process-single function multiple times (to process the json file in the specified directory)
 python pos-process-mgpu.py --input_directory ../data/output/structure --config_path ./weights/unimernet/demo.yaml --num_processes 2
 ```
 
-3.执行`json2markdown.py`将json文件转换成markdown格式
+3.Execute `json2markdown.py` to convert the json file to markdown format
 
 ```
 python json2markdown.py --input_directory ../data/output/structure
 ```
 
-4.执行`markdown2jsonl.py`将markdown转换成jsonl格式
+4.Execute `markdown2jsonl.py` to convert markdown to jsonl format
 ```
 python markdown2jsonl.py --input_directory ../data/output/structure
 ```
 
-5.（可选）使用大模型处理表格(使用书生多模态为例)
-大模型处理图片
+5.(Optional) Processing of tables using large models (by InternVL)
+- InternVL Processing
 ```
 python pos-process-figure-mgpu.py --input_directory ../data/output/structure --process figures[tables,both]
 python pos-process-table-mgpu.py --input_directory ../data/output/structure --process figures[tables,both]
 ```
-更新结构化的json文件
+- Updating structured json files
 ```
 python update-ppstru-json.py --input_directory ../data/output/structure
 ```
-继续执行上述3和4步骤即可获得最终的训练格式
+Continue with steps 3 and 4 above to obtain the final training format.
 
-6.基于jsonl的数据清洗，可进行数据脱敏和正则化删除异常值
+6.jsonl-based data cleaning with data desensitisation and regularisation to remove outliers
 ```
 python clean-jsonl.py --input_file /path/to/jsonl --delete_strs "key1" "key2"
 ```
 
-## 不同的json文件
+## Different json files
 
-1.结构化json文件(以_ocr为结尾的json格式)
+1.Structured json file (json format ending in `_ocr.json`)
 
 <details>
-  <summary>展开看具体json格式数据结构</summary>
+  <summary>Expand to see the specific json format data structure</summary>
 
 ```
 =# 主要针对pdf进行解析
@@ -267,7 +268,7 @@ lines 内部包含：
 
 </details>
 
-2.大模型训练jsonl格式（每个markdown为jsonl文件的一条元数据）：
+2.Large model training jsonl format (each markdown is a piece of metadata for the jsonl file):
 
 ```
 {
@@ -277,7 +278,7 @@ lines 内部包含：
 ```
 
 
-## 项目支持
+## Project Support
 
 - [UniMERNet](https://github.com/opendatalab/UniMERNet): A Universal Network for Real-World Mathematical Expression Recognition
 
@@ -293,4 +294,4 @@ lines 内部包含：
 
 - [MinerU](https://github.com/opendatalab/MinerU): MinerU is a one-stop, open-source data extraction tool，supports PDF/webpage/e-book extraction.
 
-## 鸣谢
+## Acknowledgments
