@@ -144,12 +144,12 @@ python markdown2jsonl.py --input_directory ../data/output/structure
 5.（可选）使用大模型处理表格(使用书生多模态为例)
 大模型处理图片
 ```
-python pos-process-figure-mgpu.py --input_directory ../data/output/structure --process figures[tables,both]
-python pos-process-table-mgpu.py --input_directory ../data/output/structure --process figures[tables,both]
+python pos-process-figure-mgpu.py --input_directory ../data/output/structure --gpus 0,1,2,3,5,6,7 --model_path ../../HFs/InternVL-Chat-V1-5
+python pos-process-table-mgpu.py --input_directory ../data/output/structure --gpus 0,1,2,3,5,6,7 --model_path ../../HFs/InternVL-Chat-V1-5
 ```
 更新结构化的json文件
 ```
-python update-ppstru-json.py --input_directory ../data/output/structure
+python update-ppstru-json.py --input_directory ../data/output/structure --process figures[tables,both]
 ```
 继续执行上述3和4步骤即可获得最终的训练格式
 

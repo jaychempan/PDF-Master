@@ -145,12 +145,12 @@ python markdown2jsonl.py --input_directory ../data/output/structure
 5.(Optional) Processing of tables using large models (by InternVL)
 - InternVL Processing
 ```
-python pos-process-figure-mgpu.py --input_directory ../data/output/structure --process figures[tables,both]
-python pos-process-table-mgpu.py --input_directory ../data/output/structure --process figures[tables,both]
+python pos-process-figure-mgpu.py --input_directory ../data/output/structure --gpus 0,1,2,3,5,6,7 --model_path ../../HFs/InternVL-Chat-V1-5
+python pos-process-table-mgpu.py --input_directory ../data/output/structure --gpus 0,1,2,3,5,6,7 --model_path ../../HFs/InternVL-Chat-V1-5
 ```
 - Updating structured json files
 ```
-python update-ppstru-json.py --input_directory ../data/output/structure
+python update-ppstru-json.py --input_directory ../data/output/structure --process figures[tables,both]
 ```
 Continue with steps 3 and 4 above to obtain the final training format.
 

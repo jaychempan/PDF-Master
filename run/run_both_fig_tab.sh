@@ -21,5 +21,10 @@ python json2markdown.py --input_directory "${output_directory}structure"
 # 运行markdown2jsonl.py
 python markdown2jsonl.py --input_directory "${output_directory}structure"
 
+# 运行pos-process-figure-mgpu.py, pos-process-table-mgpu.py, update-ppstru-json.py
+python pos-process-figure-mgpu.py --input_directory "${output_directory}structure" --gpus 0,1,2,3,5,6,7 --model_path ../../HFs/InternVL-Chat-V1-5
+python pos-process-table-mgpu.py --input_directory "${output_directory}structure" --gpus 0,1,2,3,5,6,7 --model_path ../../HFs/InternVL-Chat-V1-5
+python update-ppstru-json.py --input_directory "${output_directory}structure" --process both
+
 # 运行clean-jsonl.py
 python clean-jsonl.py --input_file "${output_directory}*_process.jsonl" --delete_strs "key1" "key2"

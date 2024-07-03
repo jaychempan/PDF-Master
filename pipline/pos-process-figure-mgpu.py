@@ -44,7 +44,7 @@ def load_images(folder_path, dir_name):
     return image_list, image_names
 
 def process_images(images, image_names, pipe):
-    questions = ['假如你是航空领域的专家，用专业的描述下面的图像？'] * len(images)
+    questions = ['用专业语言来描述下面的图像？'] * len(images)
     all_data = []
     for image_name, question, image in zip(image_names, questions, images):
         response = pipe((question, image))
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--root_directory",
+        "--input_directory",
         type=str,
         required=True,
         help="Root directory containing subdirectories with images.",
@@ -119,11 +119,11 @@ if __name__ == "__main__":
     gpus = [int(gpu) for gpu in args.gpus.split(',')]
 
     start_time = time.time()
-    work_distribution = distribute_work(args.root_directory, gpus)
+    work_distribution = distribute_work(args.input_directory, gpus)
 
     processes = []
     for gpu_id, subdirs in work_distribution.items():
-        p = mp.Process(target=process_all_gpus, args=(gpu_id, subdirs, args.root_directory, args.model_path))
+        p = mp.Process(target=process_all_gpus, args=(gpu_id, subdirs, args.input_directory, args.model_path))
         processes.append(p)
         p.start()
 

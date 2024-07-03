@@ -95,7 +95,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--root_directory",
+        "--input_directory",
         type=str,
         required=True,
         help="Root directory containing subdirectories with images.",
@@ -119,11 +119,11 @@ if __name__ == "__main__":
     gpus = [int(gpu) for gpu in args.gpus.split(',')]
 
     start_time = time.time()
-    work_distribution = distribute_work(args.root_directory, gpus)
+    work_distribution = distribute_work(args.input_directory, gpus)
 
     processes = []
     for gpu_id, subdirs in work_distribution.items():
-        p = mp.Process(target=process_all_gpus, args=(gpu_id, subdirs, args.root_directory, args.model_path))
+        p = mp.Process(target=process_all_gpus, args=(gpu_id, subdirs, args.input_directory, args.model_path))
         processes.append(p)
         p.start()
 

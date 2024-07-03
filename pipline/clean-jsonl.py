@@ -1,5 +1,7 @@
 import json
 import re
+import glob
+import argparse
 
 def process_jsonl(input_file, delete_strs):
     output_file = input_file.replace('.jsonl', '_clean.jsonl')
@@ -31,12 +33,15 @@ def process_jsonl(input_file, delete_strs):
 
 # 使用示例
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser(description='Process JSONL files.')
-    parser.add_argument('--input_file', type=str, help='Path to the input JSONL file')
+    parser.add_argument('--input_file', type=str, help='Path to the input JSONL file pattern')
     parser.add_argument('--delete_strs', nargs='+', type=str, help='Strings to be replaced with "X"')
 
     args = parser.parse_args()
 
-    process_jsonl(args.input_file, args.delete_strs)
+    # 获取匹配的文件列表
+    input_files = glob.glob(args.input_file)
+
+    # 处理每个匹配的文件
+    for input_file in input_files:
+        process_jsonl(input_file, args.delete_strs)
