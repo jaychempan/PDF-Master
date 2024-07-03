@@ -1,4 +1,4 @@
-# A Comprehensive Pipeline for PDF Parsing with Large Language Models
+# PDF-Master: A Comprehensive Pipeline for PDF Parsing with Large Language Models
 <div id="top"></div>
 <div align="left">
 
