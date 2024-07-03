@@ -16,7 +16,7 @@
 
 本项目完成PDF文档解析的框架如下所示:
 
-![](assets/llm-pdf-parsing-v2-pipline.png)
+![](assets/llm-pdf-parsing-v2-pipeline.png)
 
 ## 环境安装
 

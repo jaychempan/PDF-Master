@@ -17,7 +17,7 @@ Key features of the project include:
 
 The framework for parsing PDF documents in this project is as follows:
 
-![](assets/llm-pdf-parsing-v2-pipline.png)
+![](assets/llm-pdf-parsing-v2-pipeline-en.png)
 
 ## Environment Installation
 
