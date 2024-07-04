@@ -89,7 +89,7 @@ bash run/run_both_fig_tab.sh
 # handling of tables (by InternVL)
 bash run/run_wo_fig.sh
 ```
-Open the `pipline` file directory and follow the sequence of steps below:
+Or it can be run step-by-step, open the `pipline` file directory and follow the sequence of steps below:
 
 1.Execute `pdf-structure.py` to parse out the structure of the pdf to generate a structured json file
 

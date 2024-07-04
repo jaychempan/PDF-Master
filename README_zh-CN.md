@@ -88,7 +88,7 @@ bash run/run_both_fig_tab.sh
 # 只处理表格（使用大模型处理）
 bash run/run_wo_fig.sh
 ```
-打开`pipline`文件目录,按照下面步骤顺序进行处理：
+或者可以按照下面的方式逐步运行，打开`pipline`文件目录,按照下面步骤顺序进行处理：
 
 1.执行`pdf-structure.py`解析出pdf的结构，生成结构化的json文件
 
