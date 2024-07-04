@@ -1,4 +1,4 @@
-# PDF-Master: 一个综合的大模型PDF文档的解析流程
+# <img width="60" alt="image" src="./assets/pdf-master-logo.png"> PDF-Master: 一个综合的大模型PDF文档的解析流程
 <div id="top"></div>
 <div align="left">
 
