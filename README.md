@@ -8,7 +8,7 @@
 
 ## Project Introduction
 
-In the era of large language models, document parsing has become a significant challenge. Currently, there is no open-source document parsing framework that offers a complete parsing workflow, from document processing to the final JSONL output. This project, based on several open-source projects, builds a comprehensive parsing framework for PDF documents. The process begins with layout recognition to obtain a structured JSON output. Then, post-processing is performed to update the structured JSON for challenging elements like formulas, images, and tables. Finally, the data is assembled into a Markdown file.
+Document parsing has become a significant challenge in the era of large language models—mining important textual information from large amounts of specialized domain data, mainly in PDF form. No open-source document parsing framework offers a complete parsing workflow, from document processing to the final JSONL output. Based on several open-source projects, this project builds a comprehensive parsing framework for PDF documents. The process begins with layout recognition to obtain a structured JSON output. Then, post-processing is performed to update the structured JSON for challenging elements like formulas, images, and tables. Finally, the data is assembled into a Markdown file.
 
 Key features of the project include:
 - Multi-process and multi-threading processing for parallel acceleration
