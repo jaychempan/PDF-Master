@@ -4,19 +4,19 @@
 input_directory="../data/input/16pdfs/"
 output_directory="../data/output/16pdfs_process/"
 config_path="../weights/unimernet/demo.yaml"
-num_processes = 2
+num_processes=2
 
 # 进入pipline目录
 cd pipline
 
 # 运行pdf-structure-mgpu.py
-python pdf-structure-mgpu.py --input_directory "$input_directory" --output_directory "$output_directory" --num_processes "$num_processes"
+python pdf-structure-mgpu.py --input_directory "$input_directory" --output_directory "$output_directory" --num_processes "$num_processes" --gpus "0,1,2,3,4,5,6,7,8"
 
 # 运行pos-process-mgpu.py
-python pos-process-mgpu.py --input_directory "${output_directory}structure" --config_path "$config_path" --num_processes "$num_processes"
+python pos-process-mgpu.py --input_directory "${output_directory}structure" --config_path "$config_path" --num_processes "$num_processes" --gpus "0,1,2,3,4,5,6,7,8"
 
 # 运行json2markdown.py
-python json2markdown.py --input_directory "${output_directory}structure"
+python json2markdown.py --input_directory "${output_directory}structure" --is_figure False --is_table False --is_ocr_table False
 
 # 运行markdown2jsonl.py
 python markdown2jsonl.py --input_directory "${output_directory}structure"

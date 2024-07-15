@@ -23,5 +23,5 @@ def extract_markdown_files(src_dir):
                     print(f"复制文件 {file} 到 {target_dir}")
 
 # 示例用法
-src_directory = "/mnt/petrelfs/panjiancheng/llm-pdf-parsing/data/output/bench_process/structure"
+src_directory = "/mnt/petrelfs/panjiancheng/llm-pdf-parsing/data/output/zysy_process/structure"
 extract_markdown_files(src_directory)

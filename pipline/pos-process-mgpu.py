@@ -95,9 +95,9 @@ def progress_monitor(total_tasks, progress_queue):
             except:
                 pass
 
-def main(input_directory, config_path, num_processes):
-    gpu_ids = "0,1,2,3,4,5,6,7"
-    # gpu_ids = "2,3,4,5"
+def main(input_directory, config_path, num_processes, gpu_ids):
+    # gpu_ids = "0,1,2,3,4,5,6,7"
+    # gpu_ids = "3,4,5,6"
     gpu_list = gpu_ids.split(",")
     num_gpus = len(gpu_list)
     
@@ -142,8 +142,14 @@ if __name__ == "__main__":
     parser.add_argument("--input_directory", type=str, required=True, help="指定目录下的所有子目录包含了json文件")
     parser.add_argument("--config_path", type=str, required=True, help="配置文件路径")
     parser.add_argument("--num_processes", type=int, required=True, help="每张GPU卡分配的进程数")
+    parser.add_argument(
+    "--gpus",
+    type=str,
+    default='0,1,2,3,4,5,6,7',
+    help="Comma-separated list of GPU ids to use for processing.",
+    )
     args = parser.parse_args()
-    main(args.input_directory, args.config_path, args.num_processes)
+    main(args.input_directory, args.config_path, args.num_processes, arg.gpus)
     end_time = time.time()
     duration = end_time - start_time
     logging.info(f"最终运行时间为：{time.strftime('%H:%M:%S', time.gmtime(duration))}")

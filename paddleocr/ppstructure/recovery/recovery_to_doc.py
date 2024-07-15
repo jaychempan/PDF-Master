@@ -16,7 +16,7 @@ import os
 from copy import deepcopy
 import json
 from ppstructure.recovery.table_process import HtmlToDocx
-
+import markdownify
 from ppocr.utils.logging import get_logger
 
 logger = get_logger()
@@ -149,7 +149,8 @@ def convert_info_to_json(img, res, save_folder, img_name):
                                 {
                                     "bbox": region["bbox"],
                                     "type": "image",
-                                    "image_path": "./tables/{}_{}.jpg".format(page_idx, region["bbox"])
+                                    "image_path": "./tables/{}_{}.jpg".format(page_idx, region["bbox"]),
+                                    "ocr_content": markdownify.markdownify(region["res"]["html"], heading_style="ATX")
                                 }
                             ]
 

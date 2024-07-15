@@ -127,14 +127,22 @@ if __name__ == '__main__':
     parser.add_argument("--input_directory", type=str, required=True, help="指定目录下的所有子目录包含了json文件")
     parser.add_argument("--output_directory", type=str, required=True, help="结构解析输出文件目录")
     parser.add_argument("--num_processes", type=int, required=True, help="每张GPU卡分配的进程数")
+    parser.add_argument(
+    "--gpus",
+    type=str,
+    default='0,1,2,3,4,5,6,7',
+    help="Comma-separated list of GPU ids to use for processing.",
+    )
     args_sys = parser.parse_args()
 
     base_dir = args_sys.input_directory
     num_splits = args_sys.num_processes
     output_directory = args_sys.output_directory
+    gpus_ids = args_sys.gpus
     start_time = time.time()
-    gpus = [0, 1, 2, 3, 4, 5, 6, 7]  # 可用的GPU ID列表
-    # gpus = [2, 3, 4, 5]
+    # gpus = [0, 1, 2, 3, 4, 5, 6, 7]  # 可用的GPU ID列表
+    # gpus = [3, 4, 5, 6]
+    gpus = list(map(int, gpus_ids.split(",")))
 
     # Manager对象用于在进程之间共享数据
     manager = Manager()

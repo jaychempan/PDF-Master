@@ -3,7 +3,7 @@ import json
 import os
 
 
-def process_one_pdf(pdf_info):
+def process_one_pdf(pdf_info, is_figure, is_table, is_ocr_table):
     import markdownify
     markdown_content = []
 
@@ -12,22 +12,22 @@ def process_one_pdf(pdf_info):
         return
     
     for page in pdf_info["pdf_info"]:
-        process_one_page(page, markdown_content) # 这里面的是按照页面进行存放数据,pdf_info["pdf_info"]是包含每一页数据的列表
+        process_one_page(page, markdown_content, is_figure, is_table, is_ocr_table) # 这里面的是按照页面进行存放数据,pdf_info["pdf_info"]是包含每一页数据的列表
 
     return markdown_content
 
-def process_one_page(page_info, markdown_content):
+def process_one_page(page_info, markdown_content, is_figure, is_table, is_ocr_table):
     # print(f"Processing page index: {page_info['page_idx']}")
     
     # 按照顺序处理每一个block
     for block_idx in range(len(page_info["preproc_blocks"])):
         
-        process_one_block(page_info, markdown_content, page_info['page_idx'], block_idx)
+        process_one_block(page_info, markdown_content, page_info['page_idx'], block_idx, is_figure, is_table, is_ocr_table)
     
     # 按照顺序处理preproc_blocks中的内容，拼装成markdown
 
 # 针对不同block类型进行处理，输出成对应的markdown语句
-def process_one_block(page_info, markdown_content, page_idx, block_idx):
+def process_one_block(page_info, markdown_content, page_idx, block_idx, is_figure, is_table, is_ocr_table):
     block = page_info['preproc_blocks'][block_idx]
     math_block = page_info['interline_equations']
     fig_block = page_info['images']
@@ -63,7 +63,7 @@ def process_one_block(page_info, markdown_content, page_idx, block_idx):
                         one_text += content + ' '
         # print(one_text)
         markdown_content.append(f"{one_text}")
-    elif block_type == "image":
+    elif block_type == "image" and is_figure==True:
         one_image_body = ""
         one_image_caption = ""
         for block in block["blocks"]: # 里面可能有image_body和image_block
@@ -86,7 +86,7 @@ def process_one_block(page_info, markdown_content, page_idx, block_idx):
                             one_image_body += content
         markdown_content.append(f"{one_image_body}")
         markdown_content.append(f"{one_image_caption}")
-    elif block_type == "table":
+    elif block_type == "table" and is_table == True:
         one_image_body = ""
         one_image_caption = ""
         for block in block["blocks"]: # 里面可能有image_body和image_block
@@ -95,17 +95,20 @@ def process_one_block(page_info, markdown_content, page_idx, block_idx):
                     table_idx = line['table_idx']
                     for span in line["spans"]:
                         if span["type"] == "image":
-                            # print(table_block[table_idx]['blocks'][0]['lines'][-1]['spans'][-1])
-                            # content = table_block[table_idx]['blocks'][0]['lines'][-1]['spans'][-1]['content']
-                            # one_image_body += f"\n\n{content}\n\n"
-                            image_path = span['image_path']
-                            one_image_body += f"![Table {page_idx}]({image_path})\n\n"
-            elif block['type'] == "table_caption":
-                for line in block["lines"]:
-                    for span in line["spans"]:
-                        content = span['content']
-                        if span["type"] == "text": # 后面可以扩展行内公式（表格同理）
-                            one_image_body += content
+                            print(table_block[table_idx]['blocks'][0]['lines'][-1]['spans'][-1])
+                            if is_ocr_table:
+                                content = table_block[table_idx]['blocks'][0]['lines'][-1]['spans'][-1]['ocr_content']
+                            else:
+                                content = table_block[table_idx]['blocks'][0]['lines'][-1]['spans'][-1]['content']
+                            one_image_body += f"\n\n{content}\n\n"
+                            # image_path = span['image_path']
+                            # one_image_body += f"![Table {page_idx}]({image_path})\n\n"
+            # elif block['type'] == "table_caption":
+            #     for line in block["lines"]:
+            #         for span in line["spans"]:
+            #             content = span['content']
+            #             if span["type"] == "text": # 后面可以扩展行内公式（表格同理）
+            #                 one_image_body += content
         markdown_content.append(f"{one_image_body}")
         markdown_content.append(f"{one_image_caption}")
     elif block_type == "interline_equation":
@@ -141,7 +144,7 @@ def load_json_file(file_path):
         data = json.load(file)
     return data
 
-def process_directory(directory_path):
+def process_directory(directory_path, is_figure, is_table, is_ocr_table):
     for root, dirs, files in os.walk(directory_path):
         for dir_ in dirs:
             dir_path = os.path.join(root, dir_)
@@ -153,7 +156,7 @@ def process_directory(directory_path):
                         # print(f"processing {file}...")
                         json_file_path = os.path.join(dir_path, file)
                         pdf_info = load_json_file(json_file_path)
-                        markdown_content = process_one_pdf(pdf_info)
+                        markdown_content = process_one_pdf(pdf_info, is_figure, is_table, is_ocr_table)
                         
                         if markdown_content:
                             markdown_file_name = file.replace(".json", ".md")
@@ -181,11 +184,28 @@ if __name__ == "__main__":
     required=True,
     help="指定目录下的所有子目录包含了json文件",
     )
-
+    parser.add_argument(
+    "--is_figure",
+    type=str,
+    default=False,
+    help="指定目录下的所有子目录包含了json文件",
+    )
+    parser.add_argument(
+    "--is_table",
+    type=str,
+    default=False,
+    help="指定目录下的所有子目录包含了json文件",
+    )
+    parser.add_argument(
+    "--is_ocr_table",
+    type=str,
+    default=True,
+    help="指定目录下的所有子目录包含了json文件",
+    )
     args = parser.parse_args()
 
     start_time = time.time()
     # print(args.directory_path)
-    process_directory(args.input_directory)
+    process_directory(args.input_directory, args.is_figure, args.is_table, args.is_ocr_table)
 
     print(time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time)))

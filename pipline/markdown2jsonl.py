@@ -50,7 +50,7 @@ if __name__ == "__main__":
         "--input_directory",
         type=str,
         required=True,
-        help="指定目录下的所有子目录包含了json文件",
+        help="指定目录下的所有子目录包含了markdown文件",
     )
 
     args = parser.parse_args()
